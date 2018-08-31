@@ -53,7 +53,7 @@ contains
   subroutine InitBulk(this, bounds, info, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
-    class(waterstatebulk_type)     :: this
+    class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
@@ -83,7 +83,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type) :: this
+    class(waterstatebulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -119,7 +119,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type) :: this
+    class(waterstatebulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -192,7 +192,7 @@ contains
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type)                :: this
+    class(waterstatebulk_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     !
@@ -239,7 +239,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type) :: this
+    class(waterstatebulk_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
