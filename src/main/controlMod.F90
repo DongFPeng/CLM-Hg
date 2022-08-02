@@ -262,7 +262,8 @@ contains
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
-
+    namelist /clm_inparm/  &
+         use_erosion, ero_ccycle
     ! ----------------------------------------------------------------------
     ! Default values
     ! ----------------------------------------------------------------------
@@ -367,6 +368,11 @@ contains
           anoxia = .false.
        end if
 
+       if (.not. use_erosion .and. ero_ccycle) then
+          call endrun(msg=' ERROR: ero_ccycle = .true. requires erosion model active.'//&
+            errMsg(__FILE__, __LINE__))
+       end if 
+          
        ! ----------------------------------------------------------------------
        ! Check compatibility with the FATES model 
        if ( use_fates ) then
@@ -581,6 +587,8 @@ contains
     call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_erosion, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ero_ccycle, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -765,7 +773,8 @@ contains
     ! restart file variables
 
     call mpi_bcast (rpntfil, len(rpntfil), MPI_CHARACTER, 0, mpicom, ier)
-
+    
+    
     ! clump decomposition variables
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -799,6 +808,8 @@ contains
     write(iulog,*) '    use_vertsoilc = ', use_vertsoilc
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
+    write(iulog,*) '    use_erosion = ', use_erosion
+    write(iulog,*) '    ero_ccycle = ', ero_ccycle
     write(iulog,*) '    use_century_decomp = ', use_century_decomp
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv

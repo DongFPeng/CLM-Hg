@@ -260,6 +260,8 @@ contains
           qflx_snow_h2osfc     => waterflux_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
           qflx_snow_grnd_col   => waterflux_inst%qflx_snow_grnd_col       , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_patch => waterflux_inst%qflx_snow_grnd_patch     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
+          qflx_dirct_rain      => waterflux_inst%qflx_dirct_rain                  , & ! Output: [real(r8) (:)   ]  direct rain throughfall on ground (mm H2O/s) 
+          qflx_leafdrip        => waterflux_inst%qflx_leafdrip                    , & ! Output: [real(r8) (:)   ]  leap rain drip on ground (mm H2O/s)     
           qflx_prec_intr       => waterflux_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
           qflx_prec_grnd       => waterflux_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_rain_grnd       => waterflux_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
@@ -417,6 +419,8 @@ contains
              if (frac_veg_nosno(p) == 0) then
                 qflx_prec_grnd_snow(p) = forc_snow(c)
                 qflx_prec_grnd_rain(p) = forc_rain(c)
+                qflx_dirct_rain(p) = forc_rain(c)
+                qflx_leafdrip(p) = 0._r8
              else
                 if (snowveg_on .or. snowveg_onrad) then
                    qflx_snowindunload(p)=0._r8 
@@ -439,12 +443,16 @@ contains
                 else
                    qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
                    qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p))
+                   qflx_dirct_rain(p) = qflx_through_rain(p)
+                   qflx_leafdrip(p) = qflx_candrip(p) * fracrain(p)
                 end if
              end if
              ! Urban sunwall and shadewall have no intercepted precipitation
           else
              qflx_prec_grnd_snow(p) = 0.
              qflx_prec_grnd_rain(p) = 0.
+             qflx_dirct_rain(p) = 0._r8
+             qflx_leafdrip(p) = 0._r8
           end if
 
           ! Add irrigation water directly onto ground (bypassing canopy interception)

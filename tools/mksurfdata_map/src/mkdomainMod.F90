@@ -238,7 +238,7 @@ end subroutine domain_check
 !
 ! !LOCAL VARIABLES:
 !EOP
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
     integer :: i,j,n                           ! indices
     integer :: grid_rank                       ! rank of domain grid 
     integer :: ns                              ! size of domain grid
@@ -362,7 +362,7 @@ end subroutine domain_check
 !
 ! !LOCAL VARIABLES:
 !EOP
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
     integer :: i,j,n
     real(r8), allocatable :: lon1d(:)          ! local array for 1d lon
     real(r8), allocatable :: lat1d(:)          ! local array for 1d lat
@@ -614,7 +614,7 @@ end subroutine domain_check
 !
 ! !LOCAL VARIABLES:
 !EOP
-      include 'netcdf.inc'
+      include '/scratch/software/netcdf-4/include/netcdf.inc'
       integer :: dimid                             ! netCDF dimension id
       integer :: nlon,nlat                         ! size
       integer :: ier                               ! error status
@@ -678,7 +678,7 @@ end subroutine domain_check
 !
 ! !LOCAL VARIABLES:
 !EOP
-      include 'netcdf.inc'
+      include '/scratch/software/netcdf-4/include/netcdf.inc'
       integer :: dimid                             ! netCDF dimension id
       integer :: npts                              ! size
       integer :: ier                               ! error status
@@ -719,7 +719,7 @@ end subroutine domain_check
 
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
     type(domain_type),intent(inout) :: domain
     character(len=*)  ,intent(in)    :: fname
 !
@@ -774,7 +774,7 @@ end subroutine domain_check
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
     integer, intent(in) :: ret
     character(len=*)    :: calling
 !

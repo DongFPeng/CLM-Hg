@@ -46,6 +46,7 @@ module clm_instMod
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
+  use SedFluxType                     , only : sedflux_type
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
@@ -97,6 +98,7 @@ module clm_instMod
   type(glacier_smb_type)                  :: glacier_smb_inst
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
+  type(sedflux_type)                      :: sedflux_vars
   class(ozone_base_type), allocatable     :: ozone_inst
   type(photosyns_type)                    :: photosyns_inst
   type(soilstate_type)                    :: soilstate_inst
@@ -282,6 +284,8 @@ contains
 
     call waterflux_inst%Init(bounds)
 
+    call sedflux_vars%Init(bounds)
+
     call glacier_smb_inst%Init(bounds)
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without the following assignment, the
@@ -423,6 +427,7 @@ contains
     
     call waterflux_inst%InitAccBuffer(bounds)
 
+
     call energyflux_inst%InitAccBuffer(bounds)
 
     call canopystate_inst%InitAccBuffer(bounds)
@@ -488,6 +493,8 @@ contains
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
     call waterflux_inst%restart (bounds, ncid, flag=flag)
+
+    call sedflux_vars%restart (bounds, ncid, flag=flag)
 
     call waterstate_inst%restart (bounds, ncid, flag=flag, &
          watsat_col=soilstate_inst%watsat_col(bounds%begc:bounds%endc,:)) 

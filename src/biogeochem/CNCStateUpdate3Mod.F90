@@ -13,6 +13,9 @@ module CNCStateUpdate3Mod
   use CNVegCarbonStateType          , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType           , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonfluxType  , only : soilbiogeochem_carbonflux_type
+  use clm_varctl                    , only : use_erosion, ero_ccycle
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   !
   implicit none
   private
@@ -25,12 +28,11 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
-    ! variables affected by fire fluxes
-    !
+    ! variables affected by fire fluxes and also erosion flux
     ! !ARGUMENTS:
     integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -39,6 +41,7 @@ contains
     type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,k ! indices
@@ -83,6 +86,21 @@ contains
             end do
          end do
       end do
+
+
+      ! SOM C losses due to erosion
+      if ( ero_ccycle ) then
+          do l = 1, ndecomp_pools
+             if ( decomp_cascade_con%is_soil(l) ) then
+                do j = 1, nlevdecomp
+                   do fc = 1, num_soilc
+                      c = filter_soilc(fc)
+                      cs_soil%decomp_cpools_vr_col(c,j,l) = cs_soil%decomp_cpools_vr_col(c,j,l) - soilbiogeochem_carbonflux_inst%decomp_cpools_yield_vr(c,j,l) * dt
+                   end do
+                end do
+             end if
+          end do
+       end if
 
       ! patch-level carbon fluxes from fire
       do fp = 1,num_soilp

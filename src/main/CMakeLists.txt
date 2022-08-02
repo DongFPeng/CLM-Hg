@@ -3,6 +3,7 @@
 
 list(APPEND clm_sources
   ColumnType.F90
+  ColumnDataTypeCESM.F90
   pftconMod.F90
   FuncPedotransferMod.F90
   GridcellType.F90

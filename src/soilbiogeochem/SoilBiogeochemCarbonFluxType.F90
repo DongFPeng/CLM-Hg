@@ -12,6 +12,7 @@ module SoilBiogeochemCarbonFluxType
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use clm_varctl                         , only : use_fates
+  use clm_varctl                         , only : use_erosion
   
   ! 
   ! !PUBLIC TYPES:
@@ -37,6 +38,17 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
      real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   ! (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
      real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) ! (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
+
+      ! soil erosion fluxes
+    real(r8), pointer :: somc_erode                                  (:)     ! total SOM C detachment (gC/m^2/s)
+    real(r8), pointer :: somc_deposit                                (:)     ! total SOM C hillslope redeposition (gC/m^2/s)
+    real(r8), pointer :: somc_yield                                  (:)     ! total SOM C loss (gC/m^2/s)
+    real(r8), pointer :: decomp_cpools_erode                         (:,:)   ! vertically-integrated decomposing C detachment (gC/m^2/s)
+    real(r8), pointer :: decomp_cpools_deposit                       (:,:)   ! vertically-integrated decomposing C hillslope redeposition (gC/m^2/s)
+    real(r8), pointer :: decomp_cpools_yield                         (:,:)   ! vertically-integrated decomposing C loss (gC/m^2/s)
+    real(r8), pointer :: decomp_cpools_yield_vr                      (:,:,:) ! vertically-resolved decomposing C loss (gC/m^3/s)
+
+
 
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
@@ -128,10 +140,23 @@ contains
      allocate(this%decomp_cpools_transport_tendency_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))          
      this%decomp_cpools_transport_tendency_col(:,:,:)= nan
 
+     allocate(this%decomp_cpools_yield_vr           (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+     this%decomp_cpools_yield_vr(:,:,:) = nan
+
+     allocate(this%decomp_cpools_erode               (begc:endc,1:ndecomp_pools)) ; this%decomp_cpools_erode          (:,:) = nan
+     allocate(this%decomp_cpools_deposit             (begc:endc,1:ndecomp_pools)) ; this%decomp_cpools_deposit        (:,:) = nan
+     allocate(this%decomp_cpools_yield               (begc:endc,1:ndecomp_pools)) ; this%decomp_cpools_yield          (:,:) = nan
+
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
+
+     allocate(this%somc_erode              (begc:endc)) ; this%somc_erode              (:) = nan
+     allocate(this%somc_deposit            (begc:endc)) ; this%somc_deposit            (:) = nan
+     allocate(this%somc_yield              (begc:endc)) ; this%somc_yield              (:) = nan
+
+
 
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
@@ -195,12 +220,56 @@ contains
 
      if (carbon_type == 'c12') then
 
-        this%hr_col(begc:endc) = spval
-        call hist_addfld1d (fname='HR', units='gC/m^2/s', &
+       this%somc_erode(begc:endc) = spval
+       call hist_addfld1d (fname='SOMC_ERO', units='gC/m^2/s', &
+             avgflag='A', long_name='SOC detachment', &
+             ptr_col=this%somc_erode, default='inactive')
+
+       this%somc_deposit(begc:endc) = spval
+       call hist_addfld1d (fname='SOMC_DEP', units='gC/m^2/s', &
+             avgflag='A', long_name='SOC hillslope redeposition', &
+             ptr_col=this%somc_deposit, default='inactive')
+
+       this%somc_yield(begc:endc) = spval
+       call hist_addfld1d (fname='SOMC_YLD', units='gC/m^2/s', &
+             avgflag='A', long_name='SOC erosional loss to inland waters', &
+             ptr_col=this%somc_yield, default='inactive')
+
+       this%decomp_cpools_erode(begc:endc,:)   = spval
+       this%decomp_cpools_deposit(begc:endc,:) = spval
+       this%decomp_cpools_yield(begc:endc,:)   = spval
+       do k = 1, ndecomp_pools
+         if ( decomp_cascade_con%is_soil(k) ) then
+            data1dptr => this%decomp_cpools_erode(:,k)
+            fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_ERO'
+            longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C detachment'
+            call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                  avgflag='A', long_name=longname, &
+                  ptr_col=data1dptr, default='inactive')
+      
+            data1dptr => this%decomp_cpools_deposit(:,k)
+            fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_DEP'
+            longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C hillslope redeposition'
+            call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                  avgflag='A', long_name=longname, &
+                  ptr_col=data1dptr, default='inactive')
+      
+            data1dptr => this%decomp_cpools_yield(:,k)
+            fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_YLD'
+            longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C erosional loss to inland waters'
+            call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                  avgflag='A', long_name=longname, &
+                  ptr_col=data1dptr, default='inactive')
+         endif
+       end do
+
+
+       this%hr_col(begc:endc) = spval
+       call hist_addfld1d (fname='HR', units='gC/m^2/s', &
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%lithr_col(begc:endc) = spval
+       this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='litter C heterotrophic respiration', &
              ptr_col=this%lithr_col)
@@ -680,6 +749,9 @@ contains
        do fi = 1,num_column
           i = filter_column(fi)
           this%decomp_cpools_leached_col(i,k) = value_column
+          this%decomp_cpools_erode(i,k) = value_column
+          this%decomp_cpools_deposit(i,k) = value_column
+          this%decomp_cpools_yield(i,k) = value_column
        end do
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
@@ -705,6 +777,9 @@ contains
        this%somhr_col(i)         = value_column
        this%lithr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
+       this%somc_erode(i)                = value_column
+       this%somc_deposit(i)              = value_column
+       this%somc_yield(i)                = value_column
     end do
 
     ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
@@ -732,6 +807,9 @@ contains
     do fc = 1,num_soilc
        c = filter_soilc(fc)
        this%som_c_leached_col(c) = 0._r8
+       this%somc_erode(c)         = 0._r8
+       this%somc_deposit(c)       = 0._r8
+       this%somc_yield(c)         = 0._r8
     end do
 
     ! vertically integrate HR and decomposition cascade fluxes
@@ -749,6 +827,38 @@ contains
           end do
        end do
     end do
+
+     ! vertically integrate column-level carbon erosion flux
+    if (use_erosion) then
+      do l = 1, ndecomp_pools
+         do j = 1, nlevdecomp
+            do fc = 1, num_soilc
+               c = filter_soilc(fc)
+               this%decomp_cpools_yield(c,l) = &
+                    this%decomp_cpools_yield(c,l) + &
+                    this%decomp_cpools_yield_vr(c,j,l)*dzsoi_decomp(j)
+            end do
+         end do
+      end do
+    end if
+
+
+     ! column-level carbon losses due to soil erosion
+    if ( use_erosion ) then
+      do l = 1, ndecomp_pools
+         if ( decomp_cascade_con%is_soil(l) ) then
+            do fc = 1, num_soilc
+               c = filter_soilc(fc)
+               this%somc_erode(c) = this%somc_erode(c) + &
+                    this%decomp_cpools_erode(c,l)
+               this%somc_deposit(c) = this%somc_deposit(c) + &
+                    this%decomp_cpools_deposit(c,l)
+               this%somc_yield(c) = this%somc_yield(c) + &
+                    this%decomp_cpools_yield(c,l)
+            end do
+         end if
+      end do
+    end if
 
     ! total heterotrophic respiration, vertically resolved (HR)
     do j = 1,nlevdecomp
@@ -818,6 +928,7 @@ contains
           this%hr_col(c) = &
                this%lithr_col(c) + &
                this%somhr_col(c)
+
        
     end do
 

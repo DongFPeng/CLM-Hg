@@ -30,6 +30,7 @@ list(APPEND mksurfdat_sources
   mkvarctl.F90
   mkvarpar.F90
   shr_const_mod.F90
+  mkSedMod.F90
   shr_sys_mod.F90
   unit_test_stubs/abort.F90
   unit_test_stubs/mkncdio.F90)

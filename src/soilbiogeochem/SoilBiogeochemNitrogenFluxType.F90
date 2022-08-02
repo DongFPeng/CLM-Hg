@@ -12,7 +12,8 @@ module SoilBiogeochemNitrogenFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
+  use ColumnType                         , only : col        
+  use clm_varctl                         , only : use_erosion        
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -49,6 +50,15 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: net_nmin_col                              (:)     ! col vert-int (diagnostic) net rate of N mineralization (gN/m2/s)
      real(r8), pointer :: sminn_to_plant_fun_col                    (:)     ! col total soil N uptake of FUN        (gN/m2/s)
      ! ---------- NITRIF_DENITRIF  ---------------------
+       ! soil erosion fluxes
+     real(r8), pointer :: somn_erode                            (:)      ! total SOM N detachment (gN/m^2/s)
+     real(r8), pointer :: somn_deposit                          (:)      ! total SOM N hillslope redeposition (gN/m^2/s)
+     real(r8), pointer :: somn_yield                            (:)      ! total SOM N loss to inland waters (gN/m^2/s)
+     real(r8), pointer :: decomp_npools_erode                   (:,:)    ! vertically-integrated decomposing N detachment (gN/m^2/s)
+     real(r8), pointer :: decomp_npools_deposit                 (:,:)    ! vertically-integrated decomposing N hillslope redeposition (gN/m^2/s)
+     real(r8), pointer :: decomp_npools_yield                   (:,:)    ! vertically-integrated decomposing N loss to inland waters (gN/m^2/s)
+     real(r8), pointer :: decomp_npools_yield_vr                (:,:,:)  ! vertically-resolved decomposing N loss (gN/m^3/s)
+
 
      ! nitrification / denitrification fluxes
      real(r8), pointer :: f_nit_vr_col                              (:,:)   ! col (gN/m3/s) soil nitrification flux
@@ -122,6 +132,7 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: som_n_leached_col                         (:)     ! col total SOM N loss from vertical transport (gN/m^2/s)
      real(r8), pointer :: decomp_npools_leached_col                 (:,:)   ! col N loss from vertical transport from each decomposing N pool (gN/m^2/s)
      real(r8), pointer :: decomp_npools_transport_tendency_col      (:,:,:) ! col N tendency due to vertical transport in decomposing N pools (gN/m^3/s)
+     
 
      ! all n pools involved in decomposition
      real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
@@ -190,6 +201,11 @@ contains
     allocate(this%noutputs_col                      (begc:endc))                   ; this%noutputs_col               (:)   = nan
     allocate(this%som_n_leached_col                 (begc:endc))                   ; this%som_n_leached_col          (:)   = nan
 
+
+    allocate(this%somn_erode                        (begc:endc))                   ; this%somn_erode                     (:)   = nan
+    allocate(this%somn_deposit                      (begc:endc))                   ; this%somn_deposit                   (:)   = nan
+    allocate(this%somn_yield                        (begc:endc))                   ; this%somn_yield                     (:)   = nan
+
     allocate(this%r_psi_col                         (begc:endc,1:nlevdecomp_full)) ; this%r_psi_col                  (:,:) = spval
     allocate(this%anaerobic_frac_col                (begc:endc,1:nlevdecomp_full)) ; this%anaerobic_frac_col         (:,:) = spval
     allocate(this%potential_immob_vr_col            (begc:endc,1:nlevdecomp_full)) ; this%potential_immob_vr_col     (:,:) = nan
@@ -252,6 +268,16 @@ contains
     this%decomp_cascade_sminn_flux_vr_col (:,:,:) = nan
     this%decomp_cascade_ntransfer_col     (:,:)   = nan
     this%decomp_cascade_sminn_flux_col    (:,:)   = nan
+
+    allocate(this%decomp_npools_erode             (begc:endc,1:ndecomp_pools                                )) 
+    allocate(this%decomp_npools_deposit           (begc:endc,1:ndecomp_pools                                ))
+    allocate(this%decomp_npools_yield             (begc:endc,1:ndecomp_pools                                )) 
+    allocate(this%decomp_npools_yield_vr          (begc:endc,1:nlevdecomp_full,1:ndecomp_pools              ))  
+
+    this%decomp_npools_erode              (:,:)   = nan
+    this%decomp_npools_deposit            (:,:)   = nan
+    this%decomp_npools_yield              (:,:)   = nan
+    this%decomp_npools_yield_vr           (:,:,:) = nan
 
     allocate(this%sminn_to_denit_decomp_cascade_vr_col (begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions ))
     allocate(this%sminn_to_denit_decomp_cascade_col    (begc:endc,1:ndecomp_cascade_transitions                   ))
@@ -332,6 +358,51 @@ contains
             avgflag='A', long_name='free living  N fixation to soil mineral N', &
             ptr_col=this%ffix_to_sminn_col, default='active')
     end if
+
+    this%somn_erode(begc:endc) = spval
+    call hist_addfld1d (fname='SOMN_ERO', units='gN/m^2/s', &
+         avgflag='A', long_name='SON detachment', &
+         ptr_col=this%somn_erode, default='inactive')
+
+    this%somn_deposit(begc:endc) = spval
+    call hist_addfld1d (fname='SOMN_DEP', units='gN/m^2/s', &
+         avgflag='A', long_name='SON hillslope redeposition', &
+         ptr_col=this%somn_deposit, default='inactive')
+
+    this%somn_yield(begc:endc) = spval
+    call hist_addfld1d (fname='SOMN_YLD', units='gN/m^2/s', &
+         avgflag='A', long_name='SON erosional loss to inland waters', &
+         ptr_col=this%somn_yield, default='inactive')
+
+   
+    this%decomp_npools_erode(begc:endc,:) = spval
+    this%decomp_npools_deposit(begc:endc,:) = spval
+    this%decomp_npools_yield(begc:endc,:) = spval
+
+    do k = 1, ndecomp_pools
+      if ( decomp_cascade_con%is_soil(k) ) then
+         data1dptr => this%decomp_npools_erode(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_ERO'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N detachment'
+         call hist_addfld1d (fname=fieldname, units='gN/m^2/s',  &
+              avgflag='A', long_name=longname, &
+              ptr_col=data1dptr, default='inactive')
+
+         data1dptr => this%decomp_npools_deposit(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_DEP'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N hillslope redeposition'
+         call hist_addfld1d (fname=fieldname, units='gN/m^2/s',  &
+              avgflag='A', long_name=longname, &
+              ptr_col=data1dptr, default='inactive')
+
+         data1dptr => this%decomp_npools_yield(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_YLD'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N erosional loss to inland waters'
+         call hist_addfld1d (fname=fieldname, units='gN/m^2/s',  &
+              avgflag='A', long_name=longname, &
+              ptr_col=data1dptr, default='inactive')
+      endif
+   end do
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes
@@ -1050,12 +1121,18 @@ contains
        this%ninputs_col(i)                   = value_column
        this%noutputs_col(i)                  = value_column
        this%som_n_leached_col(i)             = value_column
+       this%somn_erode(i)                = value_column
+       this%somn_deposit(i)              = value_column
+       this%somn_yield(i)                = value_column
     end do
 
     do k = 1, ndecomp_pools
        do fi = 1,num_column
           i = filter_column(fi)
           this%decomp_npools_leached_col(i,k) = value_column
+          this%decomp_npools_erode(i,k) = value_column
+          this%decomp_npools_deposit(i,k) = value_column
+          this%decomp_npools_yield(i,k) = value_column
        end do
     end do
 
@@ -1097,6 +1174,7 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_npools_sourcesink_col(i,j,k) = value_column
+             this%decomp_npools_yield_vr(i,j,k) = value_column
           end do
        end do
     end do
@@ -1126,6 +1204,9 @@ contains
        this%denit_col(c) = 0._r8
        this%supplement_to_sminn_col(c) = 0._r8
        this%som_n_leached_col(c)       = 0._r8
+       this%somn_erode(c)          = 0._r8
+       this%somn_deposit(c)        = 0._r8
+       this%somn_yield(c)          = 0._r8
     end do
 
     ! vertically integrate decomposing N cascade fluxes and soil mineral N fluxes associated with decomposition cascade
@@ -1241,6 +1322,20 @@ contains
 
     end if
 
+        ! vertically integrate column-level N erosion flux
+    if ( use_erosion ) then
+      do l = 1, ndecomp_pools
+         do j = 1, nlevdecomp
+            do fc = 1, num_soilc
+               c = filter_soilc(fc)
+               this%decomp_npools_yield(c,l) = &
+                    this%decomp_npools_yield(c,l) + &
+                    this%decomp_npools_yield_vr(c,j,l) * dzsoi_decomp(j)
+            end do
+         end do
+      end do
+    end if
+
     ! supplementary N supplement_to_sminn
     do j = 1, nlevdecomp
        do fc = 1,num_soilc
@@ -1250,6 +1345,24 @@ contains
                this%supplement_to_sminn_vr_col(c,j) * dzsoi_decomp(j)
        end do
     end do
+
+
+    ! total column-level soil erosion N losses
+    if ( use_erosion ) then
+      do k = 1, ndecomp_pools
+         if ( decomp_cascade_con%is_soil(k) ) then
+            do fc = 1, num_soilc
+               c = filter_soilc(fc)
+               this%somn_erode(c) = this%somn_erode(c) + &
+                    this%decomp_npools_erode(c,k)
+               this%somn_deposit(c) = this%somn_deposit(c) + &
+                    this%decomp_npools_deposit(c,k)
+               this%somn_yield(c) = this%somn_yield(c) + &
+                    this%decomp_npools_yield(c,k)
+            end do
+         end if
+      end do
+    end if
 
     ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
     do l = 1, ndecomp_pools

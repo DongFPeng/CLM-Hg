@@ -20,7 +20,7 @@ module ColumnType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevslp
   use clm_varcon     , only : spval, ispval
   use shr_sys_mod    , only : shr_sys_abort
   use clm_varctl     , only : iulog
@@ -53,6 +53,7 @@ module ColumnType
      real(r8), pointer :: n_melt               (:)   ! SCA shape parameter
      real(r8), pointer :: topo_slope           (:)   ! gridcell topographic slope
      real(r8), pointer :: topo_std             (:)   ! gridcell elevation standard deviation
+     real(r8), pointer :: hslp_p10             (:,:)  ! hillslope slope percentiles (unitless)
 
      ! vertical levels
      integer , pointer :: snl                  (:)   ! number of snow layers
@@ -129,6 +130,7 @@ contains
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
+    allocate(this%hslp_p10    (begc:endc,nlevslp))             ; this%hslp_p10    (:,:) = nan
 
     allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
 
@@ -163,6 +165,7 @@ contains
     deallocate(this%n_melt     )
     deallocate(this%topo_slope )
     deallocate(this%topo_std   )
+    deallocate(this%hslp_p10   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
     deallocate(this%hydrologically_active)

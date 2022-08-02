@@ -3293,8 +3293,8 @@ sub setup_logic_nitrogen_deposition {
   }
 }
 
-#-------------------------------------------------------------------------------
 
+#-----------------------------------------------------------------------------------
 sub setup_logic_cnmresp {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
@@ -3939,11 +3939,11 @@ sub write_output_files {
     @groups = qw(clm_inparm);
     # Eventually only list namelists that are actually used when CN on
     #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {
-      push @groups, "ndepdyn_nml";
+      push @groups, "ndepdyn_nml", "erosion_nml";
     #}
   } else {
 
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
+    @groups = qw(clm_inparm erosion_nml ndepdyn_nml popd_streams urbantv_streams light_streams
                  soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                  finidat_consistency_checks dynpft_consistency_checks 

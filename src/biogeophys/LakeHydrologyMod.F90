@@ -19,7 +19,7 @@ module LakeHydrologyMod
   ! ! USES
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use decompMod            , only : bounds_type
-  use ColumnType           , only : col                
+  use ColumnType           , only : col               
   use PatchType            , only : patch                
   use atm2lndType          , only : atm2lnd_type
   use AerosolMod           , only : aerosol_type
@@ -194,7 +194,12 @@ contains
          qflx_runoff          =>  waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Output: [real(r8) (:)] solid runoff from snow capping (mm H2O /s)
          qflx_top_soil        =>  waterflux_inst%qflx_top_soil_col      , & ! Output: [real(r8) (:)   ]  net water input into soil from top (mm/s)
-
+         
+         qflx_dirct_rain_col  =>  waterflux_inst%qflx_dirct_rain_col                , & ! Output: [real(r8) (:)   ]  col direct rain throughfall (mm H2O/s)
+         qflx_leafdrip_col    =>  waterflux_inst%qflx_leafdrip_col                  , & ! Output: [real(r8) (:)   ]  col leaf rain drip (mm H2O/s)
+         qflx_dirct_rain      =>  waterflux_inst%qflx_dirct_rain                , & ! Output: [real(r8) (:)   ]  direct rain throughfall (mm H2O/s)
+         qflx_leafdrip        =>  waterflux_inst%qflx_leafdrip                  , & ! Output: [real(r8) (:)   ]  leaf rain drip (mm H2O/s)
+          
          eflx_snomelt         =>  energyflux_inst%eflx_snomelt_col      , & ! Output: [real(r8) (:)   ]  snow melt heat flux (W/m**2)
          eflx_sh_tot          =>  energyflux_inst%eflx_sh_tot_patch     , & ! Output: [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
          eflx_sh_grnd         =>  energyflux_inst%eflx_sh_grnd_patch    , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
@@ -221,6 +226,9 @@ contains
          qflx_prec_grnd_snow(p) = forc_snow(c)
          qflx_prec_grnd_rain(p) = forc_rain(c)
          qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
+         
+         qflx_dirct_rain(p) = 0._r8
+         qflx_leafdrip(p) = 0._r8
 
          qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
          qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
@@ -364,7 +372,9 @@ contains
          qflx_dew_grnd_col(c)  = qflx_dew_grnd(p)
          qflx_dew_snow_col(c)  = qflx_dew_snow(p)
          qflx_sub_snow_col(c)  = qflx_sub_snow(p)
-      enddo
+         qflx_dirct_rain_col(c) = qflx_dirct_rain(p)
+         qflx_leafdrip_col(c) = qflx_leafdrip(p)
+      end do
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Determine initial snow/no-snow filters (will be modified possibly by
@@ -381,7 +391,7 @@ contains
          else
             frac_sno_eff(c)     = 0._r8 
          endif
-      enddo
+      end do
 
       ! Determine the change of snow mass and the snow water onto soil
 

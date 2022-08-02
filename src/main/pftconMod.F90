@@ -256,6 +256,10 @@ module pftconMod
      real(r8), allocatable :: fun_cn_flex_c (:)   ! Parameter b of FUN-flexcn link code (def 80)         
      real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
 
+     ! Soil erosion ground cover
+     real(r8), allocatable :: gcpsi         (:)            !bare ground LAI-decay parameter
+     real(r8), allocatable :: pftcc         (:)            !plant cover reduction factor for transport capacity
+
 
      ! pft parameters for dynamic root code
      real(r8), allocatable :: root_dmx(:)     !maximum root depth
@@ -459,7 +463,9 @@ contains
     allocate( this%fun_cn_flex_b (0:mxpft) )
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
-    
+    ! Ground cover for soil erosion
+    allocate( this%gcpsi         (0:mxpft) )
+    allocate( this%pftcc         (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -817,6 +823,7 @@ contains
     call ncd_io('rootprof_beta', this%rootprof_beta, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+
     call ncd_io('pconv', this%pconv, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -962,6 +969,15 @@ contains
 
     call ncd_io('max_SH_planting_date', this%mxSHplantdate, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io('gcpsi', this%gcpsi, 'read', ncid, readvar=readv)
+    if ( .not. readv ) this%gcpsi(:) = 0._r8
+
+    call ncd_io('pftcc', this%pftcc, 'read', ncid, readvar=readv)
+    if ( .not. readv ) this%pftcc(:) = 1._r8
+
+   
+
 
     !
     ! Constants
@@ -1374,6 +1390,8 @@ contains
     deallocate( this%fun_cn_flex_b)
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
+    deallocate( this%gcpsi)
+    deallocate( this%pftcc)
     
   end subroutine Clean
 

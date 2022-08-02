@@ -14,7 +14,7 @@ module mkncdio
 !
 ! !PUBLIC TYPES:
   implicit none
-  include 'netcdf.inc'
+  include '/scratch/software/netcdf-4/include/netcdf.inc'
   save
 
   private

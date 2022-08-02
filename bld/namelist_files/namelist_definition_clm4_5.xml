@@ -1121,7 +1121,7 @@ Output of "git describe" to give the tag/commit the version being used correspon
 
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4,mksrf_fgrvl,mksrf_fslp10,mksrf_fero" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -1262,6 +1262,21 @@ VIC parameters dataset for mksurfdata
 <entry id="mksrf_fch4" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Inversion-derived CH4 parameters dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fgrvl" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Soil gravel content dataset
+</entry>
+
+<entry id="mksrf_fslp10" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Slope percentile dataset
+</entry>
+
+<entry id="mksrf_fero" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+ELM-Erosion parameters dataset
 </entry>
 
 <entry id="outnc_double" type="logical" category="mksurfdata"
@@ -1808,6 +1823,20 @@ Land mask description for mksurfdata input files
 Horizontal grid resolutions for mksurfdata input files
 </entry> 
 
+
+<!-- ========================================================================================  -->
+<!-- Namelist options for soil erosion model                                                   -->
+<!-- ========================================================================================  -->
+
+<entry id="use_erosion" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the soil erosion model.
+</entry>
+
+<entry id="ero_ccycle" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the soil erosion and OM pools feedback.
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- Generic issues (resolution, mask etc.)                                                    -->

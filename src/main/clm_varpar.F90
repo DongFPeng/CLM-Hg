@@ -57,7 +57,10 @@ module clm_varpar
 
   integer :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
 
+  integer, parameter :: nlevslp = 11          ! number of slope percentile levels
+
   ! constants for decomposition cascade
+  
 
   integer, parameter :: i_met_lit  = 1
   integer, parameter :: i_cel_lit  = i_met_lit + 1

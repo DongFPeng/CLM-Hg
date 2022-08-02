@@ -91,6 +91,7 @@ module CNVegetationFacade
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
+  use SedFluxType                     , only : sedflux_type
   !
   implicit none
   private
@@ -806,7 +807,7 @@ contains
        atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
        photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-       nutrient_competition_method, fireemis_inst)
+       nutrient_competition_method, fireemis_inst, sedflux_vars)
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done before hydrology-drainage
@@ -838,6 +839,7 @@ contains
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
     type(waterflux_type)                    , intent(inout) :: waterflux_inst
+    type(sedflux_type)                      , intent(inout) :: sedflux_vars
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
@@ -848,6 +850,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
+    
     !
     ! !LOCAL VARIABLES:
 
@@ -875,7 +878,7 @@ contains
          atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm, sedflux_vars)
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &

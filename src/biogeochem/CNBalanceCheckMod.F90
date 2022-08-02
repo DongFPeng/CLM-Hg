@@ -21,6 +21,7 @@ module CNBalanceCheckMod
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
+  use clm_varctl                      , only : use_erosion, ero_ccycle
 
   !
   implicit none
@@ -148,8 +149,10 @@ contains
          col_hrv_xsmrpool_to_atm =>    cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool harvest mortality 
          col_xsmrpool_to_atm     =>   cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
-
+         som_c_yield             =>    soilbiogeochem_carbonflux_inst%somc_yield        , & ! Input:  [real(r8) (:) ]  (gC/m^2/s)total SOM C loss by erosion
          totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+
+
          )
 
       ! set time steps
@@ -181,6 +184,11 @@ contains
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
+
+         ! add erosion flux
+         if (ero_ccycle) then
+            col_coutputs = col_coutputs + som_c_yield(c)
+         end if
 
          ! calculate the total column-level carbon balance error for this time step
          col_errcb(c) = (col_cinputs - col_coutputs)*dt - &
@@ -216,6 +224,12 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
+
+         if (ero_ccycle) then
+            write(iulog,*)'erosion               = ',som_c_yield(c)*dt
+         end if
+
+
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
@@ -267,7 +281,7 @@ contains
          smin_no3_runoff     => soilbiogeochem_nitrogenflux_inst%smin_no3_runoff_col     , & ! Input:  [real(r8) (:) ]  (gN/m2/s) soil mineral NO3 pool loss to runoff   
          f_n2o_nit           => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from nitrification 
          som_n_leached       => soilbiogeochem_nitrogenflux_inst%som_n_leached_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total SOM N loss from vertical transport
-
+         som_n_yield         => soilbiogeochem_nitrogenflux_inst%somn_yield              , & ! Input:  [real(r8) (:)]  total SOM N loss by erosion
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
@@ -317,6 +331,11 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
+
+         ! subtracted erosion flux
+         if (ero_ccycle) then
+            col_noutputs(c) = col_noutputs(c) + som_n_yield(c)
+         end if
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &

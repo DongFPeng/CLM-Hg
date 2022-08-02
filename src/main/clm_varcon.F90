@@ -260,6 +260,12 @@ module clm_varcon
 
   real(r8) :: kh_tbase = 298._r8 ! base temperature for calculation of Henry's constant (K)
   !-----------------------------------------------------------------------
+   !------------------------------------------------------------------
+  ! snow physical constants
+  !------------------------------------------------------------------
+  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
+  real(r8), public, parameter :: snw_rds_min = 54.526_r8    
+  !-----------------------------------------------------------------------
 
 contains
 

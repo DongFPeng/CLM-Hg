@@ -13,7 +13,9 @@ module SoilStateType
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
-  use PatchType       , only : patch                
+  use PatchType       , only : patch  
+  use clm_varctl      , only : use_erosion
+                
   !
   implicit none
   save
@@ -25,10 +27,12 @@ module SoilStateType
      ! sand/ clay/ organic matter
      real(r8), pointer :: sandfrac_patch       (:)   ! patch sand fraction
      real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction
+     real(r8), pointer :: grvlfrac_patch       (:)   ! patch gravel fraction
      real(r8), pointer :: mss_frc_cly_vld_col  (:)   ! col mass fraction clay limited to 0.20
      real(r8), pointer :: cellorg_col          (:,:) ! col organic matter for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellsand_col         (:,:) ! sand value for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellclay_col         (:,:) ! clay value for gridcell containing column (1:nlevsoi)
+     real(r8), pointer :: cellgrvl_col         (:,:) ! gravel value for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: bd_col               (:,:) ! col bulk density of dry soil material [kg/m^3] (CN)
 
      ! hydraulic properties
@@ -126,9 +130,11 @@ contains
     allocate(this%mss_frc_cly_vld_col  (begc:endc))                     ; this%mss_frc_cly_vld_col  (:)   = nan
     allocate(this%sandfrac_patch       (begp:endp))                     ; this%sandfrac_patch       (:)   = nan
     allocate(this%clayfrac_patch       (begp:endp))                     ; this%clayfrac_patch       (:)   = nan
+    allocate(this%grvlfrac_patch       (begp:endp))                     ; this%grvlfrac_patch       (:)   = nan
     allocate(this%cellorg_col          (begc:endc,nlevsoi))             ; this%cellorg_col          (:,:) = nan 
     allocate(this%cellsand_col         (begc:endc,nlevsoi))             ; this%cellsand_col         (:,:) = nan 
-    allocate(this%cellclay_col         (begc:endc,nlevsoi))             ; this%cellclay_col         (:,:) = nan 
+    allocate(this%cellclay_col         (begc:endc,nlevsoi))             ; this%cellclay_col         (:,:) = nan
+    allocate(this%cellgrvl_col         (begc:endc,nlevgrnd))            ; this%cellgrvl_col         (:,:) = nan 
     allocate(this%bd_col               (begc:endc,nlevgrnd))            ; this%bd_col               (:,:) = nan
 
     allocate(this%hksat_col            (begc:endc,nlevgrnd))            ; this%hksat_col            (:,:) = spval

@@ -112,6 +112,11 @@ module WaterfluxType
      ! ET accumulation
      real(r8), pointer :: AnnEt                    (:)   ! Annual average ET flux mmH20/s
 
+     !Erosion
+     real(r8), pointer :: qflx_dirct_rain    (:)    ! patch direct through rainfall [mm/s]
+     real(r8), pointer :: qflx_leafdrip      (:)    ! patch leaf rain drip [mm/s]
+     real(r8), pointer :: qflx_dirct_rain_col    (:)    ! col direct through rainfall [mm/s]
+     real(r8), pointer :: qflx_leafdrip_col      (:)    ! col leaf rain drip [mm/s]
 
    contains
  
@@ -244,6 +249,11 @@ contains
     allocate(this%qflx_liq_dynbal_grc      (begg:endg))              ; this%qflx_liq_dynbal_grc      (:)   = nan
     allocate(this%qflx_ice_dynbal_grc      (begg:endg))              ; this%qflx_ice_dynbal_grc      (:)   = nan
     allocate(this%AnnET                    (begc:endc))              ; this%AnnET                    (:)   = nan
+
+    allocate(this%qflx_dirct_rain        (begp:endp))             ; this%qflx_dirct_rain      (:)   = nan
+    allocate(this%qflx_leafdrip          (begp:endp))             ; this%qflx_leafdrip        (:)   = nan
+    allocate(this%qflx_dirct_rain_col        (begc:endc))             ; this%qflx_dirct_rain_col      (:)   = nan
+    allocate(this%qflx_leafdrip_col          (begc:endc))             ; this%qflx_leafdrip_col        (:)   = nan
 
     this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
@@ -542,6 +552,16 @@ contains
     call hist_addfld1d (fname='AnnET',  units='mm/s',  &
          avgflag='A', long_name='Annual ET', &
          ptr_col=this%AnnET, c2l_scale_type='urbanf', default='inactive')
+
+       this%qflx_dirct_rain(begp:endp) = spval
+    call hist_addfld1d (fname='QWTRGH', units='mm/s',  &
+         avgflag='A', long_name='direct rain throughfall', &
+         ptr_patch=this%qflx_dirct_rain, c2l_scale_type='urbanf', default='inactive')  
+
+     this%qflx_leafdrip(begp:endp) = spval
+    call hist_addfld1d (fname='QWDRIP', units='mm/s',  &
+         avgflag='A', long_name='leaf rain drip', &
+         ptr_patch=this%qflx_leafdrip, c2l_scale_type='urbanf', default='inactive')
 
   end subroutine InitHistory
   

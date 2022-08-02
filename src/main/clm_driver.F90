@@ -13,6 +13,7 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
+  use clm_varctl             , only : use_erosion
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -38,6 +39,8 @@ module clm_driver
   use SoilFluxesMod          , only : SoilFluxes ! (formerly Biogeophysics2Mod)
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
+  use SedFluxType            , only : sedflux_type
+  use SedYieldMod            , only : SoilErosion
   !
   use HydrologyNoDrainageMod , only : HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
@@ -77,7 +80,7 @@ module clm_driver
   use LandunitType           , only : lun                
   use ColumnType             , only : col                
   use PatchType              , only : patch                
-  use clm_instMod
+  use clm_instMod            
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
@@ -815,6 +818,18 @@ contains
        call t_stopf('snow_init')
 
        ! ============================================================================
+       ! Update sediment fluxes from land unit 
+       ! ============================================================================
+
+       if (use_erosion) then
+          call t_startf('erosion')
+          call SoilErosion(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
+               atm2lnd_inst, canopystate_inst, soilstate_inst, waterstate_inst, &
+               waterflux_inst, sedflux_vars)
+          call t_stopf('erosion')
+       end if
+
+       ! ============================================================================
        ! Ecosystem dynamics: Uses CN, CNDV, or static parameterizations
        ! ============================================================================
 
@@ -838,7 +853,7 @@ contains
                atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
                photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst)
+               nutrient_competition_method, fireemis_inst, sedflux_vars)
 
           call t_stopf('ecosysdyn')
 
@@ -1395,6 +1410,14 @@ contains
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterflux_inst%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
          waterflux_inst%qflx_dew_snow_col(bounds%begc:bounds%endc))
+
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         waterflux_inst%qflx_dirct_rain(bounds%begp:bounds%endp), &
+         waterflux_inst%qflx_dirct_rain_col(bounds%begc:bounds%endc))
+
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         waterflux_inst%qflx_leafdrip(bounds%begp:bounds%endp), &
+         waterflux_inst%qflx_leafdrip_col(bounds%begc:bounds%endc))
 
   end subroutine clm_drv_patch2col
 

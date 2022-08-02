@@ -12,12 +12,13 @@ module initVerticalMod
   use shr_sys_mod       , only : shr_sys_abort
   use decompMod         , only : bounds_type
   use spmdMod           , only : masterproc
-  use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
+  use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak, nlevslp
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
+  use clm_varctl        , only : use_erosion
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
@@ -124,6 +125,7 @@ contains
     character(len=256)    :: locfn             ! local filename
     real(r8) ,pointer     :: std (:)           ! read in - topo_std 
     real(r8) ,pointer     :: tslope (:)        ! read in - topo_slope 
+    real(r8) ,pointer     :: hslp_p10 (:,:)    ! read in - hillslope slope percentiles
     real(r8)              :: slope0            ! temporary
     real(r8)              :: slopebeta         ! temporary
     real(r8)              :: slopemax          ! temporary
@@ -702,6 +704,26 @@ contains
        col%topo_std(c) = std(g)
     end do
     deallocate(std)
+    
+    
+     if (use_erosion) then
+         allocate(hslp_p10(bounds%begg:bounds%endg,nlevslp))
+         call ncd_io(ncid=ncid, varname='SLP_P10', flag='read', data=hslp_p10, dim1name=grlnd, readvar=readvar)
+         if (.not. readvar) then
+            call shr_sys_abort(' ERROR: hillslope slope percentiles NOT on surfdata file'//&
+                 errMsg(__FILE__, __LINE__))
+         end if
+         do c = begc,endc
+            g = col%gridcell(c)
+            col%hslp_p10(c,:) = hslp_p10(g,:)
+         end do
+         deallocate(hslp_p10)
+      else
+         do c = begc,endc
+            g = col%gridcell(c)
+            col%hslp_p10(c,:) = 0._r8
+         end do
+      end if
 
     !-----------------------------------------------
     ! SCA shape function defined

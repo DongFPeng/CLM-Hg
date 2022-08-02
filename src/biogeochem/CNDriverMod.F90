@@ -12,6 +12,7 @@ module CNDriverMod
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
+  use clm_varctl                      , only : use_erosion
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -37,6 +38,7 @@ module CNDriverMod
   use ch4Mod                          , only : ch4_type
   use EnergyFluxType                  , only : energyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
+  use SedFluxType                     , only : sedflux_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -92,7 +94,7 @@ contains
        atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
-       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm)
+       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm, sedflux_vars)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -133,6 +135,7 @@ contains
     use NutrientCompetitionMethodMod      , only: nutrient_competition_method_type
     use CNRootDynMod                      , only: CNRootDyn
     use CNPrecisionControlMod             , only: CNPrecisionControl
+    use ErosionMod                        , only: ErosionFluxes
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -179,6 +182,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
+    type(sedflux_type)                      , intent(in)    :: sedflux_vars
     logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:
@@ -765,6 +769,15 @@ contains
     call t_stopf('CNFire')
 
 
+    if ( use_erosion ) then
+     call ErosionFluxes(bounds, num_soilc, filter_soilc, &
+          soilstate_inst, sedflux_vars, cnveg_carbonstate_inst, cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,   &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                                        &              
+          cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                                             &
+          soilbiogeochem_nitrogenflux_inst)
+    end if
+
+
     !--------------------------------------------
     ! Update3
     !--------------------------------------------
@@ -788,16 +801,16 @@ contains
     end if
 
     call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
 
     if ( use_c13 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst)
     end if
 
     if ( use_c14 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst)
 
        call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)

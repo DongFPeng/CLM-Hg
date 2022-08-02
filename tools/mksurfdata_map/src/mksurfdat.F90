@@ -32,7 +32,7 @@ program mksurfdat
     use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
     use mkutilsMod         , only : normalize_classes_by_gcell
     use mkfileMod          , only : mkfile
-    use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
+    use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft, nlevslp
     use mkvarctl
     use nanMod             , only : nan, bigint
     use mkncdio            , only : check_ret, ncd_put_time_slice
@@ -44,11 +44,12 @@ program mksurfdat
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
+    use mkSedMod           , only : mkgrvl, mkslp10, mkEROparams
 !
 ! !ARGUMENTS:
     implicit none
 
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
 !
 ! !REVISION HISTORY:
 ! Authors: Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -133,6 +134,11 @@ program mksurfdat
     real(r8), allocatable  :: vic_dsmax(:)       ! VIC Dsmax parameter (mm/day)
     real(r8), allocatable  :: vic_ds(:)          ! VIC Ds parameter (unitless)
     real(r8), allocatable  :: lakedepth(:)       ! lake depth (m)
+    real(r8), allocatable  :: grvl(:,:)          ! soil gravel content (percent)
+    real(r8), allocatable  :: slp10(:,:)          !slope percentile(km/km)
+    real(r8), allocatable  :: ero_c1(:)           ! ELM-erosion c1 parameter (unitless)
+    real(r8), allocatable  :: ero_c2(:)           ! ELM-erosion c2 parameter (unitless)
+    real(r8), allocatable  :: ero_c3(:)           ! ELM-erosion c3 parameter (unitless)
 
     real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
 
@@ -173,6 +179,9 @@ program mksurfdat
          mksrf_ftopostats,         &
          mksrf_fvic,               &
          mksrf_fch4,               &
+         mksrf_fgrvl,               &
+         mksrf_fslp10,               &
+         mksrf_fero,               &
          nglcec,                   &
          numpft,                   &
          soil_color,               &
@@ -205,6 +214,9 @@ program mksurfdat
          map_ftopostats,           &
          map_fvic,                 &
          map_fch4,                 &
+         map_fgrvl,                 &
+         map_fslp10,                 &
+         map_fero,                 &
          gitdescribe,              &
          outnc_large_files,        &
          outnc_double,             &
@@ -249,6 +261,9 @@ program mksurfdat
     !    mksrf_ftopostats Topography statistics dataset
     !    mksrf_fvic ----- VIC parameters dataset
     !    mksrf_fch4 ----- inversion-derived CH4 parameters dataset
+    !    mksrf_fgrvl ------- soil gravel content dataset
+    !    mksrf_fslp10 ------ slope percentile dataset
+    !    mksrf_fero  ------- ELM-Erosion parameters dataset
     ! ======================================
     ! Must specify mapping file for the different datafiles above
     ! ======================================
@@ -273,6 +288,9 @@ program mksurfdat
     !    map_ftopostats -- Mapping for mksrf_ftopostats
     !    map_fvic -------- Mapping for mksrf_fvic
     !    map_fch4 -------- Mapping for mksrf_fch4
+    !    map_fgrvl ------- Mapping for mksrf_fgrvl
+    !    map_gslp10 ------ Mapping for mksrf_slp10
+    !    map_fero -------- Mapping for mksrf_fero
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
@@ -450,6 +468,11 @@ program mksurfdat
                agfirepkmon(ns_o)                  , & 
                topo_stddev(ns_o)                  , &
                slope(ns_o)                        , &
+               grvl(ns_o,nlevsoi)                 , &
+               slp10(ns_o,nlevslp)                , &
+               ero_c1(ns_o)                       , &
+               ero_c2(ns_o)                       , &
+               ero_c3(ns_o)                       , &
                vic_binfl(ns_o)                    , &
                vic_ws(ns_o)                       , &
                vic_dsmax(ns_o)                    , &
@@ -480,6 +503,11 @@ program mksurfdat
     vic_dsmax(:)          = spval
     vic_ds(:)             = spval
     lakedepth(:)          = spval
+    grvl(:,:)             = spval
+    slp10(:,:)            = spval
+    ero_c1(:)             = spval
+    ero_c2(:)             = spval
+    ero_c3(:)             = spval
     glacier_region(:)     = -999
 
     ! ----------------------------------------------------------------------
@@ -550,6 +578,9 @@ program mksurfdat
     write(ndiag,*)' mapping for topography stats ',trim(map_ftopostats)
     write(ndiag,*)' mapping for VIC parameters   ',trim(map_fvic)
     write(ndiag,*)' mapping for CH4 parameters   ',trim(map_fch4)
+    write(ndiag,*)' mapping for soil gravel      ',trim(map_fch4)
+    write(ndiag,*)' mapping for slope percentile ',trim(map_fch4)
+    write(ndiag,*)' mapping for erosion params   ',trim(map_fch4)
 
     if (mksrf_fdynuse /= ' ') then
        write(6,*)'mksrf_fdynuse = ',trim(mksrf_fdynuse)
@@ -674,6 +705,16 @@ program mksurfdat
     call mkorganic (ldomain, mapfname=map_forganic, datfname=mksrf_forganic, &
          ndiag=ndiag, organic_o=organic)
 
+   ! Make erosion dataset
+    call mkgrvl (ldomain, mapfname=map_fgrvl, datfname=mksrf_fgrvl, &
+         ndiag=ndiag, grvl_o=grvl)
+   
+    call mkslp10 (ldomain, mapfname=map_fslp10, datfname=mksrf_fslp10, &
+         ndiag=ndiag, slp10_o=slp10)
+   
+    call mkEROparams (ldomain, mapfname=map_fero, datfname=mksrf_fero, &
+         ndiag=ndiag, ero_c1_o=ero_c1, ero_c2_o=ero_c2, ero_c3_o=ero_c3)
+
     ! Make VOC emission factors for isoprene &
     ! [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
 
@@ -719,6 +760,11 @@ program mksurfdat
           pctsand(n,:)     = 43._r8
           pctclay(n,:)     = 18._r8
           organic(n,:)   = 0._r8
+          grvl(n,:)      = 0._r8
+          slp10(n,:)     = 0._r8
+          ero_c1(n)      = 0._r8
+          ero_c2(n)      = 0._r8
+          ero_c3(n)      = 0._r8
        else
           pftdata_mask(n) = 1
        end if
@@ -730,6 +776,7 @@ program mksurfdat
        do k = 1,nlevsoi
           pctsand(n,k) = float(nint(pctsand(n,k)))
           pctclay(n,k) = float(nint(pctclay(n,k)))
+          grvl(n,k) = float(nint(grvl(n,k)))
        end do
        pctlak(n) = float(nint(pctlak(n)))
        pctwet(n) = float(nint(pctwet(n)))
@@ -889,6 +936,21 @@ program mksurfdat
 
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_GRVL', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, grvl), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'SLP_P10', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, slp10), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'parEro_c1', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ero_c1), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'parEro_c2', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ero_c2), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'parEro_c3', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ero_c3), subname)
 
        if ( outnc_3dglc )then
           call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
@@ -1051,6 +1113,7 @@ program mksurfdat
     deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
     deallocate ( lakedepth )
     deallocate ( glacier_region )
+    deallocate ( grvl, slp10, ero_c1, ero_c2, ero_c3)
 
     call harvdata%clean()
 

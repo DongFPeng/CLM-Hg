@@ -20,7 +20,7 @@ my $ProgDir = $1;                         # name of directory where program live
 my $cwd = getcwd();  # current working directory
 my $scrdir;
 
-if ($ProgDir) { $scrdir = $ProgDir; }
+if ($ProgDir) { $scrdir = $cwd; }
 else { $scrdir = $cwd; }
 
 my $debug = 0;
@@ -43,11 +43,11 @@ if ( ! defined($result) ) {
 ** Cannot find perl module \"Build/NamelistDefinition.pm\" from directories: @dirs **
 EOF
 }
-my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition_clm4_5.xml";
+my $nldef_file     = "/data4/home/dpeng/CESM/cesm2.1.3/components/clm/bld/namelist_files/namelist_definition_clm4_5.xml";
 
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
-my $CSMDATA = "/glade/p/cesm/cseg/inputdata";
+my $CSMDATA = "/data4/home/dpeng/CESM/cesm2.1.3/inputdata";
 
 my %opts = ( 
                hgrid=>"all", 
@@ -341,6 +341,9 @@ sub write_namelist_file {
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
+ map_fgrvl        = '$map->{'grvl'}'
+ map_fslp10       = '$map->{'slp10'}'
+ map_fero         = '$map->{'ero'}'
  mksrf_fsoitex    = '$datfil->{'tex'}'
  mksrf_forganic   = '$datfil->{'org'}'
  mksrf_flakwat    = '$datfil->{'lak'}'
@@ -354,6 +357,9 @@ sub write_namelist_file {
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
+ mksrf_fgrvl      = '$datfil->{'grvl'}'
+ mksrf_fslp10     = '$datfil->{'slp10'}'
+ mksrf_fero       = '$datfil->{'ero'}'
  outnc_double   = $double
  all_urban      = $all_urb
  no_inlandwet   = $no_inlandwet

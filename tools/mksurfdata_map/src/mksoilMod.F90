@@ -1170,7 +1170,7 @@ subroutine mksoilAtt( ncid, dynlanduse, xtype )
 
 ! !ARGUMENTS:
   implicit none
-  include 'netcdf.inc'
+  include '/scratch/software/netcdf-4/include/netcdf.inc'
   integer, intent(in) :: ncid         ! NetCDF file ID to write out to
   logical, intent(in) :: dynlanduse   ! if dynamic land-use file
   integer, intent(in) :: xtype        ! external type to output real data as

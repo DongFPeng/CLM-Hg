@@ -14,13 +14,14 @@ contains
     use mkglcmecMod  , only : nglcec
     use mkpftMod     , only : mkpftAtt
     use mksoilMod    , only : mksoilAtt
+    use mkSedMod     , only : mksedAtt
     use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
     use mkharvestMod , only : mkharvest_units, harvestDataType
     use mkncdio      , only : check_ret, ncd_defvar, ncd_def_spatial_var
     use mkdomainMod  
 
     implicit none
-    include 'netcdf.inc'
+    include '/scratch/software/netcdf-4/include/netcdf.inc'
     type(domain_type) , intent(in) :: domain
     character(len=*)  , intent(in) :: fname
     logical           , intent(in) :: dynlanduse
@@ -198,6 +199,18 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_pft_file_name', len_trim(str), trim(str)), subname)
 
+     str = get_filename(map_fgrvl)
+     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_grvl_file_name', len_trim(str), trim(str)), subname)
+
+     str = get_filename(map_fslp10)
+     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_slp10_file_name', len_trim(str), trim(str)), subname)
+     
+     str = get_filename(map_fero)
+     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_erosion_file_name', len_trim(str), trim(str)), subname)
+
     str = get_filename(map_flakwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_lakwat_file', len_trim(str), trim(str)), subname)
@@ -291,6 +304,8 @@ contains
     call mksoilAtt( ncid, dynlanduse, xtype )
 
     call mkpftAtt(  ncid, dynlanduse, xtype )
+
+    call mksedAtt( ncid, dynlanduse, xtype )
 
     call ncd_def_spatial_var(ncid=ncid, varname='AREA' , xtype=nf_double, &
          long_name='area', units='km^2')

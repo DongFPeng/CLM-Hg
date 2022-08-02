@@ -25,6 +25,8 @@ list(APPEND clm_sources
   UrbanParamsType.F90
   WaterfluxType.F90
   WaterStateType.F90
+  SedFluxType.F90
+  SedYieldMod.F90
   )
 
 sourcelist_to_parent(clm_sources)

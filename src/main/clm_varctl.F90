@@ -330,6 +330,11 @@ module clm_varctl
   !----------------------------------------------------------
   logical, public :: use_SSRE = .false.   ! flag for SSRE diagnostic
 
+  ! Soil erosion
+  !-----------------------------------------------------------------------
+  logical, public :: use_erosion    = .false.
+  logical, public :: ero_ccycle     = .false.
+
   !----------------------------------------------------------
   ! Migration of CPP variables
   !----------------------------------------------------------

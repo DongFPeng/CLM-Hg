@@ -35,10 +35,15 @@ add_subdirectory(${CLM_ROOT}/src/biogeophys clm_biogeophys)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/main clm_main)
 add_subdirectory(${CLM_ROOT}/src/init_interp clm_init_interp)
+#add external_functions
+add_subdirectory(${CLM_ROOT}/src/external_functions clm_external_function)
+
 
 # Add general unit test directories (stubbed out files, etc.)
 add_subdirectory(unit_test_stubs)
 add_subdirectory(unit_test_shr)
+
+
 
 # Remove shr_mpi_mod from share_sources.
 # This is needed because we want to use the mock shr_mpi_mod in place of the real one
@@ -83,6 +88,10 @@ add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CIMEROOT}/src/share/include)
+
+# We need to look for header files here, in order to pick up betr_assert.h
+include_directories(${CLMROOT}/src/external_functions/betr/betr_util)
+
 
 # And we need to look for header files here, for some include files needed by
 # the esmf_wrf_timemgr code
