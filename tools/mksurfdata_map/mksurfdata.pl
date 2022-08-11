@@ -641,7 +641,7 @@ EOF
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm");
+		        "gdp", "peat","soildepth","abm", "grvl", "slp10", "ero");
       if ( $opts{'vic'} ) {
          push( @typlist, "vic" );
       }
