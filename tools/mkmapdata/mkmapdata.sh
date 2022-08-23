@@ -39,7 +39,7 @@ default_res="10x15"
 # SET SOME DEFAULTS -- if not set via env variables outside
 
 if [ -z "$CSMDATA" ]; then
-   CSMDATA=/glade/p/cesm/cseg/inputdata
+   CSMDATA=/data4/home/dpeng/CESM/cesm2.1.3/inputdata
 fi
 #----------------------------------------------------------------------
 # Usage subroutine

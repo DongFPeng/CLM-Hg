@@ -316,13 +316,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- soil erosion dataset -->
 <mksrf_fgrvl hgrid="5x5min" lmask="ISRIC-WISE" 
->lnd/clm2/rawdata/mksrf_gravel_10level_5min.c190603.nc</mksrf_fgrvl>
+>lnd/clm2/rawdata/mksrf_gravel_10level_5min.c190603.nc
+</mksrf_fgrvl>
 
 <mksrf_fslp10 hgrid="0.5x0.5" lmask="AVHRR" 
->lnd/clm2/rawdata/mksrf_slope_10p_0.5x0.5.c190603.nc</mksrf_fslp10>
+>lnd/clm2/rawdata/mksrf_slope_10p_0.5x0.5.c190603.nc
+</mksrf_fslp10>
 
 <mksrf_fero hgrid="0.5x0.5" lmask="AVHRR"
->lnd/clm2/rawdata/mksrf_soilero_0.5x0.5.c190603.nc</mksrf_fero>
+>lnd/clm2/rawdata/mksrf_soilero_0.5x0.5.c190603.nc
+</mksrf_fero>
 
 <!-- mksrf_fvegtyp -->
 
