@@ -21,6 +21,7 @@ module CNVegCarbonStateType
   use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  use CNProductsMod  , only : cn_products_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -2456,6 +2457,7 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
+    type(cn_products_type), intent(in) :: c_products_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l       ! indices
@@ -2555,14 +2557,17 @@ contains
             soilbiogeochem_cwdc_col(c)    + &
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
-            this%totvegc_col(c)
+            this%totvegc_col(c)           + &
+            c_products_inst%tot_woodprod_grc
+
 
        ! total column carbon, including veg and cpool (TOTCOLC)
        this%totc_col(c) =  this%totc_p2c_col(c) + &
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
-            soilbiogeochem_ctrunc_col(c)
+            soilbiogeochem_ctrunc_col(c)    + &
+            c_products_inst%tot_woodprod_grc
 
     end do
 

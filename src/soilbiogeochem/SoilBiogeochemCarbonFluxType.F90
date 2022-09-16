@@ -50,6 +50,7 @@ module SoilBiogeochemCarbonFluxType
 
 
 
+
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
@@ -155,6 +156,10 @@ contains
      allocate(this%somc_erode              (begc:endc)) ; this%somc_erode              (:) = nan
      allocate(this%somc_deposit            (begc:endc)) ; this%somc_deposit            (:) = nan
      allocate(this%somc_yield              (begc:endc)) ; this%somc_yield              (:) = nan
+
+     allocate(this%cinputs                           (begc:endc))                  ; this%cinputs                      (:)   = nan
+     allocate(this%coutputs                          (begc:endc))                  ; this%coutputs                     (:)   = nan
+
 
 
 
@@ -780,6 +785,8 @@ contains
        this%somc_erode(i)                = value_column
        this%somc_deposit(i)              = value_column
        this%somc_yield(i)                = value_column
+       this%cinputs(i)                   = value_column
+       this%coutputs(i)                  = value_column
     end do
 
     ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col

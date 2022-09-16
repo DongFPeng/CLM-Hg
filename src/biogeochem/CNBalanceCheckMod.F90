@@ -127,6 +127,8 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
+    type(cn_products_type)               , intent(in)    :: c_products_inst
+    type(cn_products_type)               , intent(in)    :: n_products_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c,err_index    ! indices
@@ -150,7 +152,12 @@ contains
          col_xsmrpool_to_atm     =>   cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
          som_c_yield             =>    soilbiogeochem_carbonflux_inst%somc_yield        , & ! Input:  [real(r8) (:) ]  (gC/m^2/s)total SOM C loss by erosion
-         totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         totcolc                 =>    cnveg_carbonstate_inst%totc_col                  , & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+
+         col_cropprod1c_loss_grc      =>   c_products_inst%cropprod1_loss_grc                , & ! Input:  [real(r8) (:) ]  (gC/m2/s) crop leafc harvested
+         col_prodc10c_loss_grc        =>   c_products_inst%prod10_loss_grc                   , & ! Input:  [real(r8) (:) ]  (gC/m2/s) 10-year wood C harvested
+         col_prodc100c_loss_grc       =>   c_products_inst%prod100_loss_grc                   & ! Input:  [real(r8) (:) ]  (gC/m2/s) 100-year wood C harvested
+         
 
 
          )
@@ -166,32 +173,28 @@ contains
          col_endcb(c) = totcolc(c)
 
          ! calculate total column-level inputs
-         col_cinputs = gpp(c)
+         col_cinputs(c) = gpp(c)
 
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
-         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
+         col_coutputs(c) = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
               col_xsmrpool_to_atm(c)
 
-         ! Fluxes to product pools are included in column-level outputs: the product
-         ! pools are not included in totcolc, so are outside the system with respect to
-         ! these balance checks. (However, the dwt flux to product pools is NOT included,
-         ! since col_begcb is initialized after the dynamic area adjustments - i.e.,
-         ! after the dwt term has already been taken out.)
-         col_coutputs = col_coutputs + &
-              wood_harvestc(c) + &
-              grainc_to_cropprodc(c)
+         ! Wood product losses and crop export losses
+         col_coutputs(c) = col_coutputs(c) + & 
+                  col_cropprod1c_loss_grc(c) + col_prodc10c_loss_grc(c) + col_prodc100c_loss_grc(c)
+              
 
          ! subtract leaching flux
-         col_coutputs = col_coutputs - som_c_leached(c)
+         col_coutputs(c) = col_coutputs(c) - som_c_leached(c)
 
          ! add erosion flux
          if (ero_ccycle) then
-            col_coutputs = col_coutputs + som_c_yield(c)
+            col_coutputs(c) = col_coutputs(c) + som_c_yield(c)
          end if
 
          ! calculate the total column-level carbon balance error for this time step
-         col_errcb(c) = (col_cinputs - col_coutputs)*dt - &
+         col_errcb(c) = (col_cinputs(c) - col_coutputs(c))*dt - &
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
@@ -211,6 +214,8 @@ contains
          c = err_index
          write(iulog,*)'column cbalance error    = ', col_errcb(c), c
          write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'input                 = ',col_cinputs(c)*dt
+         write(iulog,*)'output                = ',col_coutputs(c)*dt
          write(iulog,*)'begcb                    = ',col_begcb(c)
          write(iulog,*)'endcb                    = ',col_endcb(c)
          write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
@@ -285,6 +290,9 @@ contains
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
+         col_cropprod1n_loss_grc      =>   n_products_inst%cropprod1_loss_grc                , & ! Input:  [real(r8) (:) ]  (gC/m2/s) crop leafc harvested
+         col_prodc10n_loss_grc        =>   n_products_inst%prod10_loss_grc                   , & ! Input:  [real(r8) (:) ]  (gC/m2/s) 10-year wood C harvested
+         col_prodc100n_loss_grc       =>   n_products_inst%prod100_loss_grc                  , & ! Input:  [real(r8) (:) ]  (gC/m2/s) 100-year wood C harvested
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
@@ -318,9 +326,9 @@ contains
          ! these balance checks. (However, the dwt flux to product pools is NOT included,
          ! since col_begnb is initialized after the dynamic area adjustments - i.e.,
          ! after the dwt term has already been taken out.)
-         col_noutputs(c) = col_noutputs(c) + &
-              wood_harvestn(c) + &
-              grainn_to_cropprodn(c)
+         col_noutputs(c) = col_noutputs(c) + & 
+                  col_cropprod1n_loss_grc(c) + col_prodc10n_loss_grc(c) + col_prodc100n_loss_grc(c)
+             
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)

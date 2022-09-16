@@ -17,7 +17,8 @@ module CNNStateUpdate1Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use PatchType                       , only : patch                
+  use PatchType                       , only : patch      
+  use CNProductsMod                   , only : cn_products_type          
   !
   implicit none
   private
@@ -43,7 +44,8 @@ contains
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    !
+    type(cn_products_type)                  , intent(in)    :: n_products_inst
+      !
     ! !LOCAL VARIABLES:
     integer  :: c   ! column index
     integer  :: g   ! gridcell index
@@ -62,9 +64,15 @@ contains
 
     dt = get_step_size_real()
 
-    do j = 1, nlevdecomp
-       do fc = 1, num_soilc_with_inactive
+       
+   do fc = 1, num_soilc_with_inactive
           c = filter_soilc_with_inactive(fc)
+          
+          n_products_inst%prod10_grc(c) = n_products_inst%prod10_grc(c) + n_products_inst%dwt_prod10_gain_grc(c)*dt
+          n_products_inst%prod100_grc(c) = n_products_inst%prod100_grc(c) + n_products_inst%dwt_prod100_gain_grc(c)*dt
+          n_products_inst%cropprod1_grc(c) = n_products_inst%cropprod1_grc(c) + n_products_inst%dwt_cropprod1_gain_grc(c)*dt
+
+       do j = 1, nlevdecomp
           ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
                nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
           ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &

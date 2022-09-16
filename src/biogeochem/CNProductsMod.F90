@@ -49,12 +49,16 @@ module CNProductsMod
      real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
      real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
      real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     
 
      ! Fluxes: losses
      real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
      real(r8), pointer :: prod10_loss_grc(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
      real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
+
+     ! erosion module
+     real(r8), pointer :: dwt_crop_productc_gain                (:)     => null() ! (gC/m2/s) addition to crop product pool
 
    contains
 
@@ -507,9 +511,9 @@ contains
     do g = bounds%begg, bounds%endg
 
        ! fluxes into wood & grain product pools, from landcover change
-       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
-       this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
-       this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
+       !this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
+       !this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
+       !this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
        ! fluxes into wood & grain product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
@@ -672,7 +676,7 @@ contains
        p = filter_soilp(fp)
 
        ! For now all crop product is put in the 1-year crop product pool
-       this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
+       this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p) - this%cropprod1_loss_grc(p)
     end do
 
     call p2g(bounds, &
@@ -724,7 +728,8 @@ contains
        ! total wood products
        this%tot_woodprod_grc(g) = &
             this%prod10_grc(g) + &
-            this%prod100_grc(g)
+            this%prod100_grc(g) + &
+            this%cropprod1_grc(g)
 
        ! total loss from wood products
        this%tot_woodprod_loss_grc(g) = &

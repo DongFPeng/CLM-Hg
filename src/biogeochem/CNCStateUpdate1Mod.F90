@@ -20,6 +20,13 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
   use clm_varctl                         , only : use_fates, use_cn, iulog
+
+  !erosion
+  use clm_varctl                         , only : use_c13, use_c14
+  use CNProductsMod                      , only : cn_products_type
+
+
+
   !
   implicit none
   private
@@ -46,6 +53,7 @@ contains
     type(cnveg_carbonflux_type)           , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(cn_products_type)               , intent(in)    :: c_products_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c   ! column index
@@ -66,9 +74,16 @@ contains
     dt = get_step_size_real()
 
     if (.not. use_fates) then
-       do j = 1,nlevdecomp
-          do fc = 1, num_soilc_with_inactive
+    
+       
+       do fc = 1, num_soilc_with_inactive
              c = filter_soilc_with_inactive(fc)
+            
+             c_products_inst%prod10_grc(c) = c_products_inst%prod10_grc(c) + c_products_inst%dwt_prod10_gain_grc(c)*dt
+             c_products_inst%prod100_grc(c) = c_products_inst%prod100_grc(c) + c_products_inst%dwt_prod100_gain_grc(c)*dt
+             c_products_inst%cropprod1_grc(c) = c_products_inst%cropprod1_grc(c) + c_products_inst%dwt_cropprod1_gain_grc(c)*dt
+
+         do j = 1,nlevdecomp
              cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
              cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
@@ -83,6 +98,7 @@ contains
        do g = bounds%begg, bounds%endg
           cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
           cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
+
        end do
 
     end if
