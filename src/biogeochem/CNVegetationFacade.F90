@@ -798,7 +798,7 @@ contains
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        num_pcropp, filter_pcropp, &
-       doalb, &
+       doalb, num_soilc_with_inactive, filter_soilc_with_inactive, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -827,6 +827,8 @@ contains
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
+    integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
+    integer                                 , intent(in)    :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -839,7 +841,6 @@ contains
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
     type(waterflux_type)                    , intent(inout) :: waterflux_inst
-    type(sedflux_type)                      , intent(inout) :: sedflux_vars
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
@@ -850,7 +851,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
-    
+    type(sedflux_type)                      , intent(in)    :: sedflux_vars
     !
     ! !LOCAL VARIABLES:
 
@@ -862,7 +863,7 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
-         num_pcropp, filter_pcropp, doalb,              &
+         num_pcropp, filter_pcropp, doalb, num_soilc_with_inactive, filter_soilc_with_inactive,            &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -1018,6 +1019,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+
     !
     ! !LOCAL VARIABLES:
     integer              :: DA_nstep                   ! time step number
@@ -1035,12 +1037,12 @@ contains
        call this%cn_balance_inst%CBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_carbonflux_inst, &
-            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst)
+            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, this%c_products_inst)
 
        call this%cn_balance_inst%NBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_nitrogenflux_inst, &
-            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst)
+            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, this%n_products_inst)
 
     end if
 

@@ -11,7 +11,7 @@ module CNVegCarbonStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop
+  use clm_varctl     , only : iulog, use_cndv, use_crop, use_c13, use_c14
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -21,7 +21,7 @@ module CNVegCarbonStateType
   use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
-  use CNProductsMod  , only : cn_products_type
+
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -2457,7 +2457,8 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
-    type(cn_products_type), intent(in) :: c_products_inst
+
+
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l       ! indices
@@ -2558,7 +2559,8 @@ contains
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
             this%totvegc_col(c)           + &
-            c_products_inst%tot_woodprod_grc
+            this%woodc_patch(c)
+   
 
 
        ! total column carbon, including veg and cpool (TOTCOLC)
@@ -2567,7 +2569,7 @@ contains
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)    + &
-            c_products_inst%tot_woodprod_grc
+            this%woodc_patch(c)
 
     end do
 

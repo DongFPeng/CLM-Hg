@@ -27,7 +27,7 @@ module dynConsBiogeochemMod
   use LandunitType                 , only : lun                
   use ColumnType                   , only : col                
   use PatchType                    , only : patch       
-  use CNProductsMod                , only : cn_products_type         
+       
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none

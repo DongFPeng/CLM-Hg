@@ -79,7 +79,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, num_soilc_with_inactive, filter_soilc_with_inactive, &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                              &
@@ -144,6 +144,10 @@ contains
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
+
+    integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
+    integer                                 , intent(in)    :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
+
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
@@ -711,7 +715,7 @@ contains
 
     call t_startf('CNWoodProducts')
     call c_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, &
+         num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
          dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -720,7 +724,7 @@ contains
 
     if (use_c13) then
        call c13_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, &
+            num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
             dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -729,7 +733,7 @@ contains
 
     if (use_c14) then
        call c14_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, &
+            num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
             dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -737,7 +741,7 @@ contains
     end if
 
     call n_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, &
+         num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
          dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &

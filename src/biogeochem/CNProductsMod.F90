@@ -25,6 +25,7 @@ module CNProductsMod
      ! ------------------------------------------------------------------------
 
      real(r8), pointer, public :: product_loss_grc(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
+     real(r8), pointer, public :: tep_tot_woodprod_grc(:) ! tep parameter for (g[C or N]/m2) total wood product pool
 
      ! ------------------------------------------------------------------------
      ! Private instance variables
@@ -33,32 +34,32 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer :: cropprod1_grc(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
-     real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
-     real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
-     real(r8), pointer :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
+     real(r8), pointer :: cropprod1_grc           (:)      ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer :: prod10_grc              (:)      ! (g[C or N]/m2) wood product pool, 10-year lifespan
+     real(r8), pointer :: prod100_grc             (:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
+     real(r8), pointer :: tot_woodprod_grc        (:)      ! (g[C or N]/m2) total wood product pool
 
      ! Fluxes: gains
-     real(r8), pointer :: dwt_prod10_gain_grc(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
-     real(r8), pointer :: dwt_prod100_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
-     real(r8), pointer :: dwt_woodprod_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to wood product pools
-     real(r8), pointer :: dwt_cropprod1_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 1-year crop product pool
-     real(r8), pointer :: hrv_deadstem_to_prod10_patch(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod100_patch(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
-     real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
-     real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: dwt_prod10_gain_grc     (:)       ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
+     real(r8), pointer :: dwt_prod100_gain_grc    (:)       ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
+     real(r8), pointer :: dwt_woodprod_gain_grc   (:)       ! (g[C or N]/m2/s) dynamic landcover addition to wood product pools
+     real(r8), pointer :: dwt_cropprod1_gain_grc  (:)       ! (g[C or N]/m2/s) dynamic landcover addition to 1-year crop product pool
+     real(r8), pointer :: hrv_deadstem_to_prod10_patch (:)       ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod10_grc   (:)       ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod100_patch(:)       ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod100_grc  (:)       ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
+     real(r8), pointer :: grain_to_cropprod1_patch     (:)       ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: grain_to_cropprod1_grc       (:)       ! (g[C or N]/m2/s) grain to 1-year crop product pool
      
 
      ! Fluxes: losses
-     real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
-     real(r8), pointer :: prod10_loss_grc(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
-     real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
-     real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
+     real(r8), pointer :: cropprod1_loss_grc           (:)        ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
+     real(r8), pointer :: prod10_loss_grc              (:)        ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
+     real(r8), pointer :: prod100_loss_grc             (:)        ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
+     real(r8), pointer :: tot_woodprod_loss_grc        (:)        ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
 
      ! erosion module
-     real(r8), pointer :: dwt_crop_productc_gain                (:)     => null() ! (gC/m2/s) addition to crop product pool
+     real(r8), pointer :: dwt_crop_productc_gain       (:)        ! (gC/m2/s) addition to crop product pool
 
    contains
 
@@ -130,6 +131,7 @@ contains
     allocate(this%prod10_grc(begg:endg)) ; this%prod10_grc(:) = nan
     allocate(this%prod100_grc(begg:endg)) ; this%prod100_grc(:) = nan
     allocate(this%tot_woodprod_grc(begg:endg)) ; this%tot_woodprod_grc(:) = nan
+    allocate(this%tep_tot_woodprod_grc(begg:endg)) ; this%tep_tot_woodprod_grc(:) = nan
 
     allocate(this%dwt_prod10_gain_grc(begg:endg)) ; this%dwt_prod10_gain_grc(:) = nan
     allocate(this%dwt_prod100_gain_grc(begg:endg)) ; this%dwt_prod100_gain_grc(:) = nan
@@ -295,6 +297,7 @@ contains
        this%prod10_grc(g) = 0._r8
        this%prod100_grc(g) = 0._r8
        this%tot_woodprod_grc(g) = 0._r8
+       this%tep_tot_woodprod_grc(g) = 0._r8
     end do
 
     ! Need to set these patch-level fluxes to 0 everywhere for the sake of special
@@ -437,7 +440,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine UpdateProducts(this, bounds, &
-       num_soilp, filter_soilp, &
+       num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
@@ -466,9 +469,13 @@ contains
 
     ! grain to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
+
+    !update from CNCStateUpdate1Mod
+    integer, intent(in) :: num_soilc_with_inactive       ! number of columns in soil filter
+    integer, intent(in) :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
     !
     ! !LOCAL VARIABLES:
-    integer  :: g        ! indices
+    integer  :: g, c, fc        ! indices
     real(r8) :: dt       ! time step (seconds)
     real(r8) :: kprod1   ! decay constant for 1-year product pool
     real(r8) :: kprod10  ! decay constant for 10-year product pool
@@ -524,6 +531,14 @@ contains
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
+
+       do fc = 1, num_soilc_with_inactive
+             c = filter_soilc_with_inactive(fc)
+            
+             this%prod10_grc(c) = this%prod10_grc(c) + this%dwt_prod10_gain_grc(c)*dt
+             this%prod100_grc(c) = this%prod100_grc(c) + this%dwt_prod100_gain_grc(c)*dt
+             this%cropprod1_grc(c) = this%cropprod1_grc(c) + this%dwt_cropprod1_gain_grc(c)*dt
+       end do
 
     end do
 
@@ -730,6 +745,10 @@ contains
             this%prod10_grc(g) + &
             this%prod100_grc(g) + &
             this%cropprod1_grc(g)
+
+       ! tep for total wood products
+       this%tep_tot_woodprod_grc(g)= &
+               this%tot_woodprod_grc(g)
 
        ! total loss from wood products
        this%tot_woodprod_loss_grc(g) = &

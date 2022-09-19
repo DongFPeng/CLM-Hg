@@ -40,7 +40,8 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   use SedFluxType            , only : sedflux_type
-  use SedYieldMod            , only : SoilErosion
+  use SedYieldMod            , only : SoilErosion 
+  use CNProductsMod          , only : cn_products_type
   !
   use HydrologyNoDrainageMod , only : HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
@@ -84,6 +85,7 @@ module clm_driver
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -143,6 +145,7 @@ contains
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
+
 
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
     ! needed to work around pgi compiler bugs, as noted below
@@ -844,7 +847,7 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
-                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
+                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,  filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc,  &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
