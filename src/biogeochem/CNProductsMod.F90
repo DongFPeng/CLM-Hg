@@ -65,16 +65,17 @@ module CNProductsMod
 
      ! Infrastructure routines
      procedure, public  :: Init
-     procedure, private :: InitAllocate
-     procedure, private :: InitHistory
-     procedure, private :: InitCold
+     procedure, public :: InitAllocate
+     procedure, public :: InitHistory
+     procedure, public :: InitCold
      procedure, public  :: Restart
 
      ! Science routines
      procedure, public  :: UpdateProducts
-     procedure, private :: PartitionWoodFluxes
-     procedure, private :: PartitionGrainFluxes
-     procedure, private :: ComputeSummaryVars
+     procedure, public :: PartitionWoodFluxes
+     procedure, public :: PartitionGrainFluxes
+     procedure, public :: ComputeSummaryVars
+
 
   end type cn_products_type
 
@@ -767,6 +768,9 @@ contains
     end do
 
   end subroutine ComputeSummaryVars
+
+  !--------------------------------------------------
+  
 
 
 end module CNProductsMod

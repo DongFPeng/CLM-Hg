@@ -1188,6 +1188,7 @@ contains
 
     call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         flux1_out_dest = 'flux_out_grc_area'
          flux1_fraction_by_pft_type = pftcon%pconv, &
          var = this%deadstemn_patch(begp:endp), &
          flux1_out = conv_nflux(begp:endp), &
