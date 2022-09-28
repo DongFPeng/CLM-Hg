@@ -227,9 +227,7 @@ contains
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
 
-         if (ero_ccycle) then
-            write(iulog,*)'erosion               = ',som_c_yield(c)*dt
-         end if
+         
 
 
          call endrun(msg=errMsg(sourcefile, __LINE__))

@@ -13,7 +13,7 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_erosion
+  use clm_varctl             , only : use_erosion, ero_ccycle
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -824,7 +824,7 @@ contains
        ! Update sediment fluxes from land unit 
        ! ============================================================================
 
-       if (use_erosion) then
+       if (use_erosion .and. use_cn) then
           call t_startf('erosion')
           call SoilErosion(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                atm2lnd_inst, canopystate_inst, soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilstate_inst, waterstate_inst, &

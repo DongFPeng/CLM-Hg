@@ -12,7 +12,7 @@ module CNDriverMod
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
-  use clm_varctl                      , only : use_erosion
+  use clm_varctl                      , only : ero_ccycle
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -773,7 +773,7 @@ contains
     call t_stopf('CNFire')
 
 
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
      call ErosionFluxes(bounds, num_soilc, filter_soilc, &
           soilstate_inst, sedflux_vars, cnveg_carbonstate_inst, cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,   &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                                        &              

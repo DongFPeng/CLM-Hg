@@ -29,6 +29,7 @@ module SedYieldMod
   use TemperatureType   , only : temperature_type
   use ColumnType        , only : col
   use LandunitType      , only : lun
+  use GridcellType    , only : grc
   use PatchType    , only : patch
   use SedFluxType       , only : sedflux_type 
   use WaterfluxType, only : waterflux_type
@@ -170,7 +171,7 @@ contains
             end if
 
             ! check the glacier landunit in the topounit
-            lt = col%landunit_indices(istice, l) 
+            lt = grc%landunit_indices(istice, l) 
             fglacier = 1._r8
             if (lt /= ispval) then
                found = .false.
@@ -222,6 +223,7 @@ contains
                      Dl = max(qflx_leafdrip(p)*dtime, 0._r8)      ! mm
                      cheight = 0.5_r8*min(htop(p)+hbot(p),40._r8) ! m
                      KE_LD = max(15.8_r8*sqrt(cheight)-5.87_r8, 0._r8) * fungrvl * Dl
+                     ! LAI and root biomass (kgC/m3): OM/OC = 1.72
                      Clai = 1._r8 - exp(-tlai(p))
                      PCT_gnd = 100._r8 * max(Crsd,Clai) ! ground cover in percentage
                      Broot = 1.e-3_r8 * ( veg_cs%frootc(p)*froot_prof(p,1) + &
@@ -229,7 +231,7 @@ contains
                      fgndcov = exp( -gcbc_p(patch%itype(p))*PCT_gnd - &
                         gcbr_p(patch%itype(p))*Broot ) 
 
-                     ! For crop veg types
+                     
                      if( patch%itype(p) > nc4_grass )then
                         Es_Pcrp = Es_Pcrp + pfactor(c) * ftillage * flitho * &
                            fgndcov * patch%wtcol(p) * K * (KE_DT+KE_LD)

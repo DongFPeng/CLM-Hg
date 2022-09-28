@@ -713,7 +713,8 @@ program mksurfdat
          ndiag=ndiag, slp10_o=slp10)
    
     call mkEROparams (ldomain, mapfname=map_fero, datfname=mksrf_fero, &
-         ndiag=ndiag, ero_c1_o=ero_c1, ero_c2_o=ero_c2, ero_c3_o=ero_c3)
+         ndiag=ndiag, ero_c1_o=ero_c1, ero_c2_o=ero_c2, ero_c3_o=ero_c3, tillage_o=tillage, &
+         litho_o=litho)
 
     ! Make VOC emission factors for isoprene &
     ! [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
@@ -764,7 +765,8 @@ program mksurfdat
           slp10(n,:)     = 0._r8
           ero_c1(n)      = 0._r8
           ero_c2(n)      = 0._r8
-          ero_c3(n)      = 0._r8
+          tillage(n)       = 0._r8
+          litho(n)         = 0._r8
        else
           pftdata_mask(n) = 1
        end if
@@ -952,6 +954,12 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'parEro_c3', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, ero_c3), subname)
 
+       call check_ret(nf_inq_varid(ncid, 'Tillage', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, tillage), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'Litho', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, litho), subname)
+
        if ( outnc_3dglc )then
           call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
           call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
@@ -1113,8 +1121,8 @@ program mksurfdat
     deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
     deallocate ( lakedepth )
     deallocate ( glacier_region )
-    deallocate ( grvl, slp10, ero_c1, ero_c2, ero_c3)
-
+    deallocate ( grvl, slp10)
+    deallocate ( ero_c1, ero_c2, ero_c3, tillage, litho )
     call harvdata%clean()
 
     ! ----------------------------------------------------------------------

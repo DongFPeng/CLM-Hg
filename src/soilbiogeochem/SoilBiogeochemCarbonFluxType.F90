@@ -12,7 +12,7 @@ module SoilBiogeochemCarbonFluxType
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use clm_varctl                         , only : use_fates
-  use clm_varctl                         , only : use_erosion
+  use clm_varctl                         , only : ero_ccycle
   
   ! 
   ! !PUBLIC TYPES:
@@ -833,7 +833,7 @@ contains
     end do
 
      ! vertically integrate column-level carbon erosion flux
-    if (use_erosion) then
+    if (ero_ccycle) then
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
             do fc = 1, num_soilc
@@ -848,7 +848,7 @@ contains
 
 
      ! column-level carbon losses due to soil erosion
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
       do l = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(l) ) then
             do fc = 1, num_soilc
