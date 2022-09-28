@@ -82,6 +82,10 @@ module SoilStateType
      real(r8), pointer :: root_conductance_patch(:,:) ! patch root conductance [mm/s]
      real(r8), pointer :: soil_conductance_patch(:,:) ! patch soil conductance [mm/s]
 
+     ! soil erosion
+     real(r8), pointer :: tillage_col          (:)    ! col soil conserved tillage fraction 
+     real(r8), pointer :: litho_col            (:)    ! col soil lithology erodiblity index
+
    contains
 
      procedure, public  :: Init         
@@ -181,6 +185,10 @@ contains
     allocate(this%nsw_col              (begc:endc,1:nlevgrnd))          ; this%nsw_col              (:,:) = nan
     allocate(this%alphasw_col          (begc:endc,1:nlevgrnd))          ; this%alphasw_col          (:,:) = nan
     allocate(this%watres_col           (begc:endc,1:nlevgrnd))          ; this%watres_col           (:,:) = nan
+
+    allocate(this%tillage_col          (begc:endc))                     ; this%tillage_col          (:)   = spval
+    allocate(this%litho_col            (begc:endc))                     ; this%litho_col            (:)   = spval
+    
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------

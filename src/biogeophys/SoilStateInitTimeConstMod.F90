@@ -152,6 +152,8 @@ contains
     real(r8) ,pointer  :: clay3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: grvl3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: organic3d (:,:)               ! read in - organic matter: kg/m3 (needs to be a pointer for use in ncdio)
+    real(r8) ,pointer  :: tillage_in (:,:)              ! read in - conserved tillage fraction
+    real(r8) ,pointer  :: litho_in (:,:)                ! read in - lithology erodibility index
     character(len=256) :: locfn                         ! local filename
     integer            :: ipedof  
     integer            :: begp, endp
@@ -303,6 +305,33 @@ contains
        soilstate_inst%wtfact_col(c) = gti(g)
     end do
     deallocate(gti)
+
+    ! Read tillage and lithology
+    if (use_erosion) then
+       allocate(tillage_in(bounds%begg:bounds%endg,max_topounits))
+       allocate(litho_in(bounds%begg:bounds%endg,max_topounits))
+
+       call ncd_io(ncid=ncid, varname='Tillage', flag='read', data=tillage_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          call endrun(msg=' ERROR: Tillage NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+       end if
+      
+       call ncd_io(ncid=ncid, varname='Litho', flag='read', data=litho_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          call endrun(msg=' ERROR: Litho NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+       end if
+
+       do c = bounds%begc, bounds%endc
+          g = col%gridcell(c)
+          t = col%topounit(c)
+          topi = grc_pp%topi(g)
+          ti = t - topi + 1
+          this%tillage_col(c) = tillage_in(g,ti)
+          this%litho_col(c) = litho_in(g,ti)
+       end do
+
+       deallocate(tillage_in, litho_in)
+    end if
 
     ! Close file
 

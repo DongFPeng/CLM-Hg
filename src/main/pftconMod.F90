@@ -257,8 +257,11 @@ module pftconMod
      real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
 
      ! Soil erosion ground cover
-     real(r8), allocatable :: gcpsi         (:)            !bare ground LAI-decay parameter
-     real(r8), allocatable :: pftcc         (:)            !plant cover reduction factor for transport capacity
+     real(r8), allocatable :: gcbc_p(:)           !effectiveness of surface cover in reducing rainfall-driven erosion
+     real(r8), allocatable :: gcbc_q(:)           !effectiveness of surface cover in reducing runoff-driven erosion
+     real(r8), allocatable :: gcbr_p(:)           !effectiveness of roots in reducing rainfall-driven erosion
+     real(r8), allocatable :: gcbr_q(:)           !effectiveness of roots in reducing runoff-driven erosion! Soil erosion ground cover
+
 
 
      ! pft parameters for dynamic root code
@@ -464,9 +467,10 @@ contains
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
     ! Ground cover for soil erosion
-    allocate( this%gcpsi         (0:mxpft) )
-    allocate( this%pftcc         (0:mxpft) )
- 
+    allocate( gcbc_p             (0:mxpft) )
+    allocate( gcbc_q             (0:mxpft) )
+    allocate( gcbr_p             (0:mxpft) )
+    allocate( gcbr_q             (0:mxpft) )
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -970,11 +974,14 @@ contains
     call ncd_io('max_SH_planting_date', this%mxSHplantdate, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     
-    call ncd_io('gcpsi', this%gcpsi, 'read', ncid, readvar=readv)
-    if ( .not. readv ) this%gcpsi(:) = 0._r8
-
-    call ncd_io('pftcc', this%pftcc, 'read', ncid, readvar=readv)
-    if ( .not. readv ) this%pftcc(:) = 1._r8
+    call ncd_io('gcbc_p',gcbc_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) gcbc_p(:) = 0._r8
+    call ncd_io('gcbc_q',gcbc_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) gcbc_q(:) = 0._r8
+    call ncd_io('gcbr_p',gcbr_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) gcbr_p(:) = 0._r8
+    call ncd_io('gcbr_q',gcbr_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) gcbr_q(:) = 0._r8
 
    
 
