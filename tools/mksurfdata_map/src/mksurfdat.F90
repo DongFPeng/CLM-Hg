@@ -139,6 +139,8 @@ program mksurfdat
     real(r8), allocatable  :: ero_c1(:)           ! ELM-erosion c1 parameter (unitless)
     real(r8), allocatable  :: ero_c2(:)           ! ELM-erosion c2 parameter (unitless)
     real(r8), allocatable  :: ero_c3(:)           ! ELM-erosion c3 parameter (unitless)
+    real(r8), allocatable  :: tillage(:)         ! conserved tillage fraction (fraction)
+    real(r8), allocatable  :: litho(:)           ! lithology erodiblity index (unitless)
 
     real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
 
@@ -473,6 +475,8 @@ program mksurfdat
                ero_c1(ns_o)                       , &
                ero_c2(ns_o)                       , &
                ero_c3(ns_o)                       , &
+               tillage(ns_o)                      , &
+               litho(ns_o)                        , &
                vic_binfl(ns_o)                    , &
                vic_ws(ns_o)                       , &
                vic_dsmax(ns_o)                    , &
@@ -508,6 +512,8 @@ program mksurfdat
     ero_c1(:)             = spval
     ero_c2(:)             = spval
     ero_c3(:)             = spval
+    tillage(:)            = spval
+    litho(:)              = spval
     glacier_region(:)     = -999
 
     ! ----------------------------------------------------------------------
@@ -765,6 +771,7 @@ program mksurfdat
           slp10(n,:)     = 0._r8
           ero_c1(n)      = 0._r8
           ero_c2(n)      = 0._r8
+          ero_c3(n)      = 0._r8
           tillage(n)       = 0._r8
           litho(n)         = 0._r8
        else

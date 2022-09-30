@@ -360,7 +360,7 @@ contains
 
 
     if (flux1_out_dest=='filterp_with_inactive') then
-    ！if (flux1_out_dest=='veg%column(bounds%begp, bounds%endp)') then
+            !!!if (flux1_out_dest=='veg%column(bounds%begp, bounds%endp)') then
        call this%update_patch_state(bounds, &
          num_filterp_with_inactive, filterp_with_inactive, &
          var, flux_out_col_area = total_flux_out, &
