@@ -146,8 +146,8 @@ contains
     integer              :: ier                     ! error code
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
     type(bounds_type)    :: bounds_clump    
-    type(bounds_type)    :: bounds_proc     
-
+    type(bounds_type)    :: bounds_proc    
+    
 
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
     ! needed to work around pgi compiler bugs, as noted below

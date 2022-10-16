@@ -1397,6 +1397,10 @@ contains
     deallocate( this%fun_cn_flex_b)
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
+    deallocate( this%gcbc_p)
+    deallocate( this%gcbc_q)
+    deallocate( this%gcbr_p)
+    deallocate( this%gcbc_q)
 
     
   end subroutine Clean

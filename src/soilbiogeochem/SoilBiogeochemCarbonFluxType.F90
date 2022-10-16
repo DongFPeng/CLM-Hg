@@ -241,6 +241,7 @@ contains
        this%decomp_cpools_erode(begc:endc,:)   = spval
        this%decomp_cpools_deposit(begc:endc,:) = spval
        this%decomp_cpools_yield(begc:endc,:)   = spval
+       
        do k = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(k) ) then
             data1dptr => this%decomp_cpools_erode(:,k)

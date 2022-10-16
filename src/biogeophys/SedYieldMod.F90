@@ -39,6 +39,7 @@ module SedYieldMod
   use IrrigationMod     , only : irrigation_type
   use pftconMod         , only : pftcon
 
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -85,7 +86,8 @@ contains
     type(sedflux_type)                                             , intent(inout) :: sedflux_vars
     type(irrigation_type)                                          , intent(in)    :: irrigation_inst
     type(cnveg_carbonstate_type)                                   , intent(in)    :: cnveg_carbonstate_inst
-    !
+    
+       !
     ! !LOCAL VARIABLES:
     integer  :: c, fc, p, t, l, g, j                       ! indices
     integer  :: lg, cg, lt                                 ! indices of glaciers
@@ -164,7 +166,7 @@ contains
             c = filter_soilc(fc)
             l = col%landunit(c)
             g = col%gridcell(c)
-            !t = col%topounit(c)
+            
 
             ! initialization
             flx_p_ero(c)          = 0._r8
@@ -179,7 +181,7 @@ contains
             end if
 
             ! check the glacier landunit in the topounit
-            lt = grc%landunit_indices(istice_mec, l) 
+            lt = grc%landunit_indices(istice_mec, g) 
             fglacier = 1._r8
             if (lt /= ispval) then
                found = .false.
@@ -216,21 +218,23 @@ contains
             Es_P = 0._r8    ! detachment by throughfall + leap drip
             Es_Pcrp = 0._r8 ! cropland detachment by throughfall + leap drip
 
+            ! Calculate throughfall and leap drip
+            !! check temperature and rain events
             if (forc_t(c)>SHR_CONST_TKFRZ .and. forc_rain(c)>0._r8) then
                fungrvl = 1._r8 - 0.01_r8 * fgrvl(c,1)
                do p = col%patchi(c), col%patchf(c)
+
                   if (patch%active(p) .and. patch%wtcol(p)>0._r8) then
-
-                     ! throughfall power
-
-                     Ptot = (qflx_dirct_rain(p) + qflx_real_irrig(p)) * dtime    ! mm
-                     Ie = 3.6e3_r8 * (forc_rain(t) + qflx_real_irrig(p))         ! mm/hr
+                     ! throughfall power(add irrig or not)
+                     Ptot = qflx_dirct_rain(p) * dtime    ! mm
+                     Ie = 3.6e3_r8 * (forc_rain(c))         ! mm/hr
                      KE_DT = Ptot * fungrvl * max(8.95_r8+8.44_r8*log10(Ie), 0._r8)
 
                       !leaf drip power
                      Dl = max(qflx_leafdrip(p)*dtime, 0._r8)      ! mm
                      cheight = 0.5_r8*min(htop(p)+hbot(p),40._r8) ! m
                      KE_LD = max(15.8_r8*sqrt(cheight)-5.87_r8, 0._r8) * fungrvl * Dl
+
                      ! LAI and root biomass (kgC/m3): OM/OC = 1.72
                      Clai = 1._r8 - exp(-tlai(p))
                      PCT_gnd = 100._r8 * max(Crsd,Clai) ! ground cover in percentage
@@ -239,7 +243,32 @@ contains
                      fgndcov = exp( -gcbc_p(patch%itype(p))*PCT_gnd - &
                         gcbr_p(patch%itype(p))*Broot ) 
 
-                     
+                     ! write temp records for few paramerters
+                     open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/test_erosion_v2_checkEQ1/run/variables.log')
+                     write(10,*)  '####'
+                     write(10,*)  'dtime=', dtime
+                     write(10,*)  'forc_rain(c)', forc_rain(c)
+                     write(10,*)  'qflx_dirct_rain(p)', qflx_dirct_rain(p)
+                     write(10,*)  'qflx_leafdrip(p)', qflx_leafdrip(p)
+                     write(10,*)  'Dl', Dl
+                     write(10,*)  'fgrvl(c,1)=', fgrvl(c,1) 
+                     write(10,*)  'Ptot=', Ptot
+                     write(10,*)  'Ie=', Ie
+                     write(10,*)  'cheight=', cheight
+                     write(10,*)  'KE_LD', KE_LD
+                     write(10,*)  'KE_DT=', KE_DT
+                     write(10,*)  'Clai=', Clai
+                     write(10,*)  'PCT_gnd=', PCT_gnd
+                     write(10,*)  'Broot=', Broot
+                     write(10,*)  'fgndcov=', fgndcov
+                     write(10,*)  'K=', K
+                     write(10,*)  'pfactor(c)=', pfactor(c)
+                     write(10,*)  'flitho=', flitho
+                     write(10,*)  'ftillage=', ftillage
+                     write(10,*)  'patch%wtcol(p)=', patch%wtcol(p)
+                     write(10,*)  '####'
+
+                     !check cropland or not
                      if( patch%itype(p) > nc4_grass )then
                         Es_Pcrp = Es_Pcrp + pfactor(c) * ftillage * flitho * &
                            fgndcov * patch%wtcol(p) * K * (KE_DT+KE_LD)
@@ -253,9 +282,12 @@ contains
                   end if
                end do
             end if
-
+            ! calculate the erosion in land without snowcover
             Es_P = 1.e-3_r8 / dtime * (1._r8 - frac_sno(c)) * Es_P        ! kg/m2/s 
             Es_Pcrp = 1.e-3_r8 / dtime * (1._r8 - frac_sno(c)) * Es_Pcrp  ! kg/m2/s
+            !Es_P = 1e-7_r8 / 8.64_r8 * Es_P
+            !Es_Pcrp = 1e-7_r8 / 8.64_r8 * Es_P
+
 
             ! snow scaling factor from T factor of BQART
             Qs = 8.64e4_r8 * qflx_surf(c)                ! mm/d

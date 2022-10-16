@@ -39,6 +39,7 @@ module CNDriverMod
   use EnergyFluxType                  , only : energyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
   use SedFluxType                     , only : sedflux_type
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -890,7 +891,8 @@ contains
        soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenstate_inst, &
+       c_products_inst, c13_products_inst, c14_products_inst)
     !
     ! !DESCRIPTION:
     ! Call to all CN and SoilBiogeochem summary routines, for state variables
@@ -913,6 +915,9 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(cn_products_type)                  , intent(in)    :: c_products_inst
+    type(cn_products_type)                  , intent(in)    :: c13_products_inst
+    type(cn_products_type)                  , intent(in)    :: c14_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
@@ -946,7 +951,7 @@ contains
          soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c_products_inst)
 
     if ( use_c13 ) then
        call c13_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
@@ -954,7 +959,7 @@ contains
             soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c13_products_inst)
     end if
 
     if ( use_c14 ) then
@@ -963,7 +968,7 @@ contains
             soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c14_products_inst)
     end if
 
     call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &

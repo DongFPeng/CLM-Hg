@@ -66,9 +66,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: c, fc, l, j                              ! indices
-    integer  :: kc, kn, kp                               ! new layer indices
+    integer  :: kc, kn                                   ! new layer indices
     integer  :: k1, k2                                   ! new layer indices     
-    real(r8) :: dh, dhn, dhp                             ! erosion height (m)
+    real(r8) :: dh, dhn                                  ! erosion height (m)
     real(r8) :: dm_ero, dm_yld, dm                       ! erosion mass (kg/m2)
     real(r8) :: soc_yld                                  ! SOC erosion (gC/m2)
     real(r8) :: zsoi_tot, zsoi_top                       ! soil layer height (m)
@@ -153,9 +153,8 @@ contains
             if (soc<=0._r8 .and. son<=0._r8) then
                pn2poc = 1._r8 / 10.2_r8         ! Beusen et al. (2005)
             end if
-            !pp2poc = 1._r8 / 22_r8              ! Meybeck (1982)
 
-            ! equivalent erosion heights for N and P
+            ! equivalent erosion heights for N
             dm = pn2poc * soc_yld
             dhn = 0._r8
             kn = 1
@@ -166,7 +165,9 @@ contains
                      ntot = ntot + npools_vr_col(c,j,l)   
                   end if
                end do
-               if (dm<=ntot*dzsoi_decomp(j)) then
+               if (dm<=ntot*dzsoi_decomp(j) .and. ntot>0._r8) then
+                  open(unit=10, file='final_v2.log' )
+                  write(10,*) 'dhn = ', dhn, 'dm = ', dm, 'ntot =', ntot
                   dhn = dhn + dm/ntot
                   exit
                end if

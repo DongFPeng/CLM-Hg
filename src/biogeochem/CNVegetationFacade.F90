@@ -767,6 +767,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+   
     !
     ! !LOCAL VARIABLES:
 
@@ -784,7 +785,7 @@ contains
          soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call this%cn_balance_inst%BeginCNBalance( &
          bounds, num_soilc, filter_soilc, &
@@ -974,7 +975,7 @@ contains
          soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call  CNDriverSummarizeFluxes(bounds, &
          num_soilc, filter_soilc, &

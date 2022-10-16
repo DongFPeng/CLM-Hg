@@ -439,6 +439,8 @@ contains
                    endif
                    qflx_prec_grnd_snow(p) = qflx_through_snow(p) + qflx_snocanfall(p)  + snounload(p)/dtime
                    qflx_prec_grnd_rain(p) = qflx_through_rain(p) + qflx_liqcanfall(p) 
+                   qflx_dirct_rain(p) = qflx_through_rain(p)
+                   qflx_leafdrip(p) = qflx_liqcanfall(p)
 
                 else
                    qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))

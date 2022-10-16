@@ -177,9 +177,14 @@ contains
          col_coutputs(c) = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
               col_xsmrpool_to_atm(c)
 
-         ! Wood product losses and crop export losses
-         col_coutputs(c) = col_coutputs(c) + & 
-                  c_products_inst%product_loss_grc(c)
+          ! Fluxes to product pools are included in column-level outputs: the product
+         ! pools are not included in totcolc, so are outside the system with respect to
+         ! these balance checks. (However, the dwt flux to product pools is NOT included,
+         ! since col_begcb is initialized after the dynamic area adjustments - i.e.,
+         ! after the dwt term has already been taken out.)
+         col_coutputs(c) = col_coutputs(c) + &
+              wood_harvestc(c) + &
+              grainc_to_cropprodc(c)
               
 
          ! subtract leaching flux
@@ -320,8 +325,9 @@ contains
          ! these balance checks. (However, the dwt flux to product pools is NOT included,
          ! since col_begnb is initialized after the dynamic area adjustments - i.e.,
          ! after the dwt term has already been taken out.)
-         col_noutputs(c) = col_noutputs(c) + & 
-                  n_products_inst%product_loss_grc(c)
+         col_noutputs(c) = col_noutputs(c) + &
+              wood_harvestn(c) + &
+              grainn_to_cropprodn(c)
              
 
          if (.not. use_nitrif_denitrif) then
