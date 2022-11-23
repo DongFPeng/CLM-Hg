@@ -38,6 +38,7 @@ module lnd2atmMod
   use LandunitType         , only : lun
   use GridcellType         , only : grc                
   use landunit_varcon      , only : istice_mec
+  use SedFluxType          , only : sedflux_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -126,7 +127,7 @@ contains
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
        solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-       lnd2atm_inst, &
+       sedflux_vars, lnd2atm_inst, &
        net_carbon_exchange_grc) 
     !
     ! !DESCRIPTION:
@@ -153,6 +154,7 @@ contains
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
+    type(sedflux_type)          , intent(in)    :: sedflux_vars
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
@@ -405,6 +407,11 @@ contains
     do g = bounds%begg, bounds%endg
        waterstate_inst%tws_grc(g) = waterstate_inst%tws_grc(g) + atm2lnd_inst%volr_grc(g) / grc%area(g) * 1.e-3_r8
     enddo
+
+    call c2g( bounds, &
+         sedflux_vars%sed_yld_col(bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofmud_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
   end subroutine lnd2atm
 
