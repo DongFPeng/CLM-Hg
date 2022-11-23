@@ -2,7 +2,7 @@ module ErosionMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Calculate erosion induced soil particulate C, N and P fluxes 
+  ! Calculate erosion induced soil particulate C, N fluxes 
   !
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
@@ -166,8 +166,8 @@ contains
                   end if
                end do
                if (dm<=ntot*dzsoi_decomp(j) .and. ntot>0._r8) then
-                  open(unit=10, file='final_v2.log' )
-                  write(10,*) 'dhn = ', dhn, 'dm = ', dm, 'ntot =', ntot
+                  !open(unit=10, file='final_v2.log' )
+                  !write(10,*) 'dhn = ', dhn, 'dm = ', dm, 'ntot =', ntot
                   dhn = dhn + dm/ntot
                   exit
                end if

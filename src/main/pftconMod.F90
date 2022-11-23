@@ -975,13 +975,13 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     
     call ncd_io('gcbc_p',this%gcbc_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) this%gcbc_p(:) = 0._r8
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     call ncd_io('gcbc_q',this%gcbc_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) this%gcbc_q(:) = 0._r8
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     call ncd_io('gcbr_p',this%gcbr_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) this%gcbr_p(:) = 0._r8
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     call ncd_io('gcbr_q',this%gcbr_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) this%gcbr_q(:) = 0._r8
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
    
 

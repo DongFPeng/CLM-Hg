@@ -22,8 +22,7 @@ module CNBalanceCheckMod
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
   use clm_varctl                      , only : use_erosion, ero_ccycle
-  use clm_varctl                      , only : use_c13, use_c14
-  use CNProductsMod                   , only : cn_products_type
+  
   
 
   !
@@ -117,7 +116,7 @@ contains
  
   !-----------------------------------------------------------------------
   subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, c_products_inst)
+       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -130,7 +129,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
-    type(cn_products_type)               , intent(in)    :: c_products_inst
+    
     
 
     !
@@ -244,7 +243,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, n_products_inst)
+       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform nitrogen mass conservation check
@@ -260,7 +259,6 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
-    type(cn_products_type)                  , intent(in)    :: n_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,err_index,j  ! indices

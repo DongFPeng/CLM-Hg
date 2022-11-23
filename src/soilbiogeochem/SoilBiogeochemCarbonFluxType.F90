@@ -761,7 +761,8 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_cpools_transport_tendency_col(i,j,k) = value_column
-             this%decomp_cpools_sourcesink_col(i,j,k)         = value_column  
+             this%decomp_cpools_sourcesink_col(i,j,k)         = value_column
+             this%decomp_cpools_yield_vr(i,j,k) = value_column   
           end do
        end do
     end do
