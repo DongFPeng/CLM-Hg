@@ -37,6 +37,7 @@ module SoilBiogeochemStateType
      real(r8) , pointer :: pathfrac_decomp_cascade_col (:,:,:) ! (frac) what fraction of C leaving a given pool passes through a given transition 
      real(r8) , pointer :: nfixation_prof_col          (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: ndep_prof_col               (:,:)   ! (1/m) profile for N fixation additions 
+     real(r8) , pointer :: Hgdep_prof_col              (:,:)   ! (1/m) profile for Hg fixation additions
      real(r8) , pointer :: som_adv_coef_col            (:,:)   ! (m2/s) SOM advective flux 
      real(r8) , pointer :: som_diffus_coef_col         (:,:)   ! (m2/s) SOM diffusivity due to bio/cryo-turbation 
      real(r8) , pointer :: plant_ndemand_col           (:)     ! column-level plant N demand
@@ -98,6 +99,7 @@ contains
     allocate(this%fpg_col             (begc:endc))                   ; this%fpg_col             (:)   = nan
     allocate(this%nfixation_prof_col  (begc:endc,1:nlevdecomp_full)) ; this%nfixation_prof_col  (:,:) = spval
     allocate(this%ndep_prof_col       (begc:endc,1:nlevdecomp_full)) ; this%ndep_prof_col       (:,:) = spval
+    allocate(this%Hgdep_prof_col      (begc:endc,1:nlevdecomp_full)) ; this%Hgdep_prof_col      (:,:) = spval
     allocate(this%som_adv_coef_col    (begc:endc,1:nlevdecomp_full)) ; this%som_adv_coef_col    (:,:) = spval
     allocate(this%som_diffus_coef_col (begc:endc,1:nlevdecomp_full)) ; this%som_diffus_coef_col (:,:) = spval
     allocate(this%plant_ndemand_col   (begc:endc))                   ; this%plant_ndemand_col   (:)   = nan
@@ -160,6 +162,11 @@ contains
     call hist_addfld_decomp (fname='NFIXATION_PROF', units='1/m',  type2d='levdcmp', &
          avgflag='A', long_name='profile for biological N fixation', &
          ptr_col=this%nfixation_prof_col, default='inactive')
+
+     this%Hgdep_prof_col(begc:endc,:) = spval
+     call hist_addfld_decomp (fname='HgDEP_PROF', units='1/m',  type2d='levdcmp', &
+         avgflag='A', long_name='profile for atmospheric Hg  deposition', &
+         ptr_col=this%Hgdep_prof_col, default='inactive')
 
     this%ndep_prof_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='NDEP_PROF', units='1/m',  type2d='levdcmp', &
@@ -247,6 +254,7 @@ contains
           ! initialize the profiles for converting to vertically resolved carbon pools
           this%nfixation_prof_col(c,1:nlevdecomp_full)  = 0._r8 
           this%ndep_prof_col(c,1:nlevdecomp_full)       = 0._r8 
+          this%Hgdep_prof_col(c,1:nlevdecomp_full)      = 0._r8
        end if
     end do
 

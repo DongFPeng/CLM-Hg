@@ -22,7 +22,9 @@ module CNCStateUpdate1Mod
   use clm_varctl                         , only : use_fates, use_cn, iulog
 
 
-
+  real(r8), public, parameter :: f_surf_met = 0.25
+  real(r8), public, parameter :: f_surf_cel = 0.5
+  real(r8), public, parameter :: f_surf_lig = 0.25
 
   !
   implicit none

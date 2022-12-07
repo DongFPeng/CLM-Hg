@@ -16,9 +16,13 @@ module SoilBiogeochemDecompMod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemhgFluxType           , only : soilbiogeochem_hgflux_type 
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
+
+  use spmdMod        , only : masterproc
+  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
   !
   implicit none
   private
@@ -70,6 +74,7 @@ contains
   subroutine SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_hgflux_inst,  p_decomp_hgpool_loss,                                          &
        cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
     !
     ! !USES:
@@ -82,9 +87,11 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(in)    :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_hgflux_type)        , intent(inout) :: soilbiogeochem_hgflux_inst !added hg 
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     real(r8)                                , intent(inout) :: cn_decomp_pools(bounds%begc:,1:,1:)     ! c:n ratios of applicable pools
     real(r8)                                , intent(inout) :: p_decomp_cpool_loss(bounds%begc:,1:,1:) ! potential C loss from one pool to another
+    real(r8)                                , intent(inout) :: p_decomp_hgpool_loss(bounds%begc:,1:,1:) !added hg: potential hg loss from one pool to another
     real(r8)                                , intent(inout) :: pmnf_decomp_cascade(bounds%begc:,1:,1:) ! potential mineral N flux from one pool to another
     !
     ! !LOCAL VARIABLES:
@@ -100,6 +107,7 @@ contains
     
     SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(p_decomp_hgpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__)) !added hg.
     SHR_ASSERT_ALL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
 
     associate(                                                                                                          & 
@@ -127,6 +135,8 @@ contains
          w_scalar                         =>    soilbiogeochem_carbonflux_inst%w_scalar_col                           , & ! Input:  [real(r8) (:,:)   ]  fraction by which decomposition is limited by moisture availability
          decomp_cascade_hr_vr             =>    soilbiogeochem_carbonflux_inst%decomp_cascade_hr_vr_col               , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          decomp_cascade_ctransfer_vr      =>    soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_vr_col        , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
+         decomp_cascade_hr_hg_vr          =>    soilbiogeochem_hgflux_inst%decomp_cascade_hr_hg_vr_col                , & ! added hg:Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing hg pools (ghg/m3/s)
+         decomp_cascade_hgtransfer_vr     =>    soilbiogeochem_hgflux_inst%decomp_cascade_hgtransfer_vr_col           , & !added hg:Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing Hg pools (gC/m3/s)
          decomp_k                         =>    soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)      
          phr_vr                           =>    soilbiogeochem_carbonflux_inst%phr_vr_col                             , & ! Input:  [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
          fphr                             =>    soilbiogeochem_carbonflux_inst%fphr_col                                 & ! Output: [real(r8) (:,:)   ]  fraction of potential SOM + LITTER heterotrophic
@@ -184,7 +194,9 @@ contains
                      end if
                   end if
                   decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+                  decomp_cascade_hr_hg_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_hgpool_loss(c,j,k)
                   decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
+                  decomp_cascade_hgtransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_hgpool_loss(c,j,k)
                   if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) /= i_atm) then
                      decomp_cascade_ntransfer_vr(c,j,k) = p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
                   else

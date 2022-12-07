@@ -9,6 +9,7 @@ module SoilBiogeochemPrecisionControlMod
   use clm_varpar                      , only : ndecomp_pools
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemHgStateType       , only : soilbiogeochem_Hgstate_type
   use ColumnType                      , only : col
   !
   implicit none
@@ -27,7 +28,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-       c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
+       c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_Hgstate_inst)
 
     !
     ! !DESCRIPTION: 
@@ -41,6 +42,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_Hgstate_type)       , intent(inout) :: soilbiogeochem_Hgstate_inst
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: totvegcthresh = 0.1_r8   ! Total vegetation carbon threshold to zero out decomposition pools
@@ -62,7 +64,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemPrecisionControl(num_soilc, filter_soilc, &
        soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-       c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
+       c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_Hgstate_inst)
 
     !
     ! !DESCRIPTION: 
@@ -81,6 +83,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_Hgstate_type)       , intent(inout) :: soilbiogeochem_Hgstate_inst 
     !
     ! !LOCAL VARIABLES:
     integer :: c,j,k ! indices
@@ -101,6 +104,7 @@ contains
     associate(&
          cs    => soilbiogeochem_carbonstate_inst     , &
          ns    => soilbiogeochem_nitrogenstate_inst   , & 
+         Hgs    => soilbiogeochem_Hgstate_inst        , &
          c13cs => c13_soilbiogeochem_carbonstate_inst , &
          c14cs => c14_soilbiogeochem_carbonstate_inst   &
          )
@@ -188,6 +192,26 @@ contains
          end do
       endif
      endif
+
+     if(.not.use_fun)then
+      if (use_nitrif_denitrif) then
+         ! remove small negative perturbations for stability purposes, if any should arise.
+        
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            do j = 1,nlevdecomp
+               
+               if (abs(Hgs%Soil_hg_vr_col(c,j)) < ncrit/1e4_r8) then
+                  if ( Hgs%Soil_hg_vr_col(c,j)  < 0._r8 ) then
+                     !write(iulog, *) '-10^-12 < smin_nh4 < 0. resetting to zero.'
+                     !write(iulog, *) 'smin_nh4_vr_col(c,j), c, j: ', ns%smin_nh4_vr_col(c,j), c, j
+                     Hgs%Soil_hg_vr_col(c,j) = 0._r8
+                  endif
+               end if
+            end do
+         end do
+      endif
+     endif 
 
     end associate
 

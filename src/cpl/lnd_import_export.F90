@@ -399,7 +399,7 @@ contains
        l2x(index_l2x_Flrl_irrig,i) = - lnd2atm_inst%qirrig_grc(g)
 
        ! sediment flux to 
-       l2x(index_l2x_Flrl_rofmud,i) = - lnd2atm_inst%qflx_rofmud_grc(g)
+       l2x(index_l2x_Flrl_rofmud,i) =  lnd2atm_inst%qflx_rofmud_grc(g)
 
        ! glc coupling
        ! We could avoid setting these fields if glc_present is .false., if that would

@@ -38,6 +38,8 @@ module clm_instMod
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
+  use SoilBiogeochemHgStateType       , only : soilbiogeochem_Hgstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
   use DUSTMod                         , only : dust_type
@@ -82,6 +84,10 @@ module clm_instMod
   use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
   use LakeCon                         , only : LakeConInit 
   use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
+
+  use spmdMod        , only : masterproc
+  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+  use CNVegStateType  , only : cnveg_state_type
   !
   implicit none
   public   ! By default everything is public 
@@ -137,6 +143,9 @@ module clm_instMod
   type(soilbiogeochem_carbonflux_type)    :: c14_soilbiogeochem_carbonflux_inst
   type(soilbiogeochem_nitrogenstate_type) :: soilbiogeochem_nitrogenstate_inst
   type(soilbiogeochem_nitrogenflux_type)  :: soilbiogeochem_nitrogenflux_inst
+  type(soilbiogeochem_Hgflux_type)        :: soilbiogeochem_Hgflux_inst
+  type(soilbiogeochem_Hgstate_type)       :: soilbiogeochem_HgState_inst
+  !type(cnveg_state_type)                  :: cnveg_state_inst
 
   ! General biogeochem types
   type(ch4_type)                          :: ch4_inst
@@ -189,6 +198,12 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+        !---------------added Hg--------------------------------------------
+    use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+     
+    use spmdMod        , only : masterproc
+    use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+   !-------------------added Hg end------------------------------------
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -387,7 +402,15 @@ contains
             soilbiogeochem_carbonstate_inst%decomp_cpools_col(begc:endc,1:ndecomp_pools),  &
             soilbiogeochem_carbonstate_inst%decomp_cpools_1m_col(begc:endc, 1:ndecomp_pools))
 
+      
        call soilbiogeochem_nitrogenflux_inst%Init(bounds) 
+
+       !-------------------------------------- added Hg--------------------------
+       call soilbiogeochem_Hgstate_inst%Init(bounds,                          &
+            soilbiogeochem_hgstate_inst)
+
+
+       call soilbiogeochem_Hgflux_inst%Init(bounds)   
 
        ! Initialize precision control for soil biogeochemistry
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -532,6 +555,8 @@ contains
        call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
        call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
             totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+
+       call soilbiogeochem_hgstate_inst%restart(bounds, ncid, flag=flag)
 
        if (use_c13) then
           call c13_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &

@@ -1091,6 +1091,211 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
+<!-- hg0 deposition streams namelist defaults -->
+<stream_year_first_hg0dep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg0dep>
+<model_year_align_hg0dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg0dep>
+
+<stream_year_first_hg0dep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg0dep>
+<model_year_align_hg0dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="2010" >2010</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="2000" >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="2000" >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="1850" >1850</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="1850" >1850</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="1000" >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="1000" >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_hg0dep>
+
+<stream_fldfilename_hg0dep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+
+<!-- Only the CMIP6 Tier I hg0 deposition files are available -->
+<stream_fldfilename_hg0dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+
+<stream_fldfilename_hg0dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+<stream_fldfilename_hg0dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+
+<hg0dep_taxmode            phys="clm5_0" use_cn=".true.">cycle</hg0dep_taxmode>
+<hg0dep_varlist            phys="clm5_0" use_cn=".true.">hg0dep_month</hg0dep_varlist>
+<hg0dep_taxmode            phys="clm5_0" use_cn=".true.">limit</hg0dep_taxmode>
+
+<hg0dep_taxmode            phys="clm4_5" use_cn=".true.">cycle</hg0dep_taxmode>
+<hg0dep_varlist            phys="clm4_5" use_cn=".true.">hg0dep_month</hg0dep_varlist>
+<hg0dep_taxmode            phys="clm4_5" use_cn=".true.">limit</hg0dep_taxmode>
+
+<hg0depmapalgo                use_cn=".true." >bilinear</hg0depmapalgo>
+
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</hg0depmapalgo>
+<hg0depmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</hg0depmapalgo>
+
+<!-- hg2 deposition streams namelist defaults -->
+
+<stream_year_first_hg2dep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg2dep>
+<model_year_align_hg2dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg2dep>
+
+<stream_year_first_hg2dep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg2dep>
+<model_year_align_hg2dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="2010" >2010</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="2000" >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="2000" >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="1850" >1850</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="1850" >1850</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="1000" >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="1000" >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_hg2dep>
+
+<stream_fldfilename_hg2dep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+
+<!-- Only the CMIP6 Tier I hg2 deposition files are available -->
+<stream_fldfilename_hg2dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+
+<stream_fldfilename_hg2dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+<stream_fldfilename_hg2dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+
+<hg2dep_taxmode            phys="clm5_0" use_cn=".true.">cycle</hg2dep_taxmode>
+<hg2dep_varlist            phys="clm5_0" use_cn=".true.">hg2dep_month</hg2dep_varlist>
+<hg2dep_taxmode            phys="clm5_0" use_cn=".true.">limit</hg2dep_taxmode>
+
+<hg2dep_taxmode            phys="clm4_5" use_cn=".true.">cycle</hg2dep_taxmode>
+<hg2dep_varlist            phys="clm4_5" use_cn=".true.">hg2dep_month</hg2dep_varlist>
+<hg2dep_taxmode            phys="clm4_5" use_cn=".true.">limit</hg2dep_taxmode>
+
+<hg2depmapalgo                use_cn=".true." >bilinear</hg2depmapalgo>
+
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</hg2depmapalgo>
+<hg2depmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</hg2depmapalgo>
+
+<!-- hg2_dry deposition streams namelist defaults -->
+<stream_year_first_hg2_dry_dep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg2_dry_dep>
+<model_year_align_hg2_dry_dep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_hg2_dry_dep>
+<model_year_align_hg2_dry_dep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="2010" >2010</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="2000" >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="2000" >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="1850" >1850</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="1850" >1850</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="1000" >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="1000" >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_hg2_dry_dep>
+
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+
+
+
+
+<!-- Only the CMIP6 Tier I hg2 deposition files are available -->
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+
+<hg2_dry_dep_taxmode            phys="clm5_0" use_cn=".true.">cycle</hg2_dry_dep_taxmode>
+<hg2_dry_dep_varlist            phys="clm5_0" use_cn=".true.">hg2_dry_dep_month</hg2_dry_dep_varlist>
+<hg2_dry_dep_taxmode            phys="clm5_0" use_cn=".true.">limit</hg2_dry_dep_taxmode>
+
+<hg2_dry_dep_taxmode            phys="clm4_5" use_cn=".true.">cycle</hg2_dry_dep_taxmode>
+<hg2_dry_dep_varlist            phys="clm4_5" use_cn=".true.">hg2_dry_dep_month</hg2_dry_dep_varlist>
+<hg2_dry_dep_taxmode            phys="clm4_5" use_cn=".true.">limit</hg2_dry_dep_taxmode>
+
+<hg2_dry_depmapalgo                use_cn=".true." >bilinear</hg2_dry_depmapalgo>
+
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</hg2_dry_depmapalgo>
+<hg2_dry_depmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</hg2_dry_depmapalgo>
+
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
 <use_soil_moisture_streams>.false.</use_soil_moisture_streams>

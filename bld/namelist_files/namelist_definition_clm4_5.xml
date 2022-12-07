@@ -1564,6 +1564,165 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- added hg0 -->
+<!-- ========================================================================================  -->
+<entry id="stream_year_first_hg0dep" type="integer" category="datasets"
+       group="hg0depdyn_nml" valid_values="" >
+First year to loop over for hg Deposition data
+</entry>
+
+<entry id="stream_year_last_hg0dep" type="integer" category="datasets"
+       group="hg0depdyn_nml" valid_values="" >
+Last year to loop over for hg Deposition data
+</entry>
+
+<entry id="model_year_align_hg0dep" type="integer" category="datasets"
+       group="hg0depdyn_nml" valid_values="" >
+Simulation year that aligns with stream_year_first_hg0dep value
+</entry>
+
+<entry id="stream_fldfilename_hg0dep" type="char*256" category="datasets"
+       input_pathname="abs" group="hg0depdyn_nml" valid_values="" >
+Filename of input stream data for hg Deposition
+</entry>
+
+<entry id="hg0dep_taxmode" type="char*80" category="datasets"
+       group="hg0depdyn_nml" valid_values="cycle,extend,limit" >
+Time interpolation mode to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
+</entry>
+
+<entry id="hg0dep_tintalgo" type="char*80" category="datasets"
+       group="hg0depdyn_nml" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for hg Deposition
+</entry>
+
+<entry id="hg0dep_varlist" type="char*256" category="datasets"
+       group="hg0depdyn_nml" valid_values="" >
+Colon delimited list of variables to read from the streams file for hg deposition
+(Normally just read the single variable hg0dep_year or hg0dep_month)
+</entry>
+
+<entry id="hg0depmapalgo" type="char*256" category="datasets"
+       group="hg0depdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from hg0 deposition input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- added hg2 -->
+<!-- ========================================================================================  -->
+<entry id="stream_year_first_hg2dep" type="integer" category="datasets"
+       group="hg2depdyn_nml" valid_values="" >
+First year to loop over for hg Deposition data
+</entry>
+
+<entry id="stream_year_last_hg2dep" type="integer" category="datasets"
+       group="hg2depdyn_nml" valid_values="" >
+Last year to loop over for hg Deposition data
+</entry>
+
+<entry id="model_year_align_hg2dep" type="integer" category="datasets"
+       group="hg2depdyn_nml" valid_values="" >
+Simulation year that aligns with stream_year_first_hg2dep value
+</entry>
+
+<entry id="stream_fldfilename_hg2dep" type="char*256" category="datasets"
+       input_pathname="abs" group="hg2depdyn_nml" valid_values="" >
+Filename of input stream data for hg Deposition
+</entry>
+
+<entry id="hg2dep_taxmode" type="char*80" category="datasets"
+       group="hg2depdyn_nml" valid_values="cycle,extend,limit" >
+Time interpolation mode to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
+</entry>
+
+<entry id="hg2dep_tintalgo" type="char*80" category="datasets"
+       group="hg2depdyn_nml" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for hg Deposition
+</entry>
+
+<entry id="hg2dep_varlist" type="char*256" category="datasets"
+       group="hg2depdyn_nml" valid_values="" >
+Colon delimited list of variables to read from the streams file for hg deposition
+(Normally just read the single variable hg2dep_year or hg2dep_month)
+</entry>
+
+<entry id="hg2depmapalgo" type="char*256" category="datasets"
+       group="hg2depdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from hg2 deposition input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- added hg2_dry -->
+<!-- ========================================================================================  -->
+<entry id="stream_year_first_hg2_dry_dep" type="integer" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="" >
+First year to loop over for hg Deposition data
+</entry>
+
+<entry id="stream_year_last_hg2_dry_dep" type="integer" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="" >
+Last year to loop over for hg Deposition data
+</entry>
+
+<entry id="model_year_align_hg2_dry_dep" type="integer" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="" >
+Simulation year that aligns with stream_year_first_hg2_dry_dep value
+</entry>
+
+<entry id="stream_fldfilename_hg2_dry_dep" type="char*256" category="datasets"
+       input_pathname="abs" group="hg2_dry_depdyn_nml" valid_values="" >
+Filename of input stream data for hg Deposition
+</entry>
+
+<entry id="hg2_dry_dep_taxmode" type="char*80" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="cycle,extend,limit" >
+Time interpolation mode to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
+</entry>
+
+<entry id="hg2_dry_dep_tintalgo" type="char*80" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for hg Deposition
+</entry>
+
+<entry id="hg2_dry_dep_varlist" type="char*256" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="" >
+Colon delimited list of variables to read from the streams file for hg deposition
+(Normally just read the single variable hg2_dry_dep_year or hg2_dry_dep_month)
+</entry>
+
+<entry id="hg2_dry_depmapalgo" type="char*256" category="datasets"
+       group="hg2_dry_depdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from hg2_dry deposition input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- finundated stream -->
 <!-- ========================================================================================  -->
 

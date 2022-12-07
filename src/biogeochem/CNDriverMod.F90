@@ -25,6 +25,8 @@ module CNDriverMod
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
+  use SoilBiogeochemHgStateType       , only : soilbiogeochem_Hgstate_type
   use CNDVType                        , only : dgvs_type
   use CanopyStateType                 , only : canopystate_type
   use SoilStateType                   , only : soilstate_type
@@ -66,6 +68,14 @@ contains
     use CNPhenologyMod              , only : CNPhenologyInit
     use CNFireMethodMod             , only : cnfire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
+    
+    use SoilBiogeochemHgStateUpdate1Mod  , only: SoilBiogeochemHgStateUpdate1
+    use SoilBiogeochemHgStateUpdate3Mod  , only: SoilBiogeochemHgStateUpdate3
+    use spmdMod        , only : masterproc
+    use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+
+    !type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds      
@@ -92,6 +102,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
+       soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,                            &
        atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
@@ -108,7 +119,7 @@ contains
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c, p2c_2d
     use CropType                          , only: crop_type
-    use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
+    use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation, HgDeposition
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
     use CNPhenologyMod                    , only: CNPhenology
@@ -133,6 +144,12 @@ contains
     use SoilBiogeochemVerticalProfileMod  , only: SoilBiogeochemVerticalProfile
     use SoilBiogeochemNitrifDenitrifMod   , only: SoilBiogeochemNitrifDenitrif
     use SoilBiogeochemNStateUpdate1Mod    , only: SoilBiogeochemNStateUpdate1
+        !---------------added Hg--------------------------------------------
+    use SoilBiogeochemHgStateUpdate1Mod  , only: SoilBiogeochemHgStateUpdate1
+    use SoilBiogeochemHgStateUpdate3Mod  , only: SoilBiogeochemHgStateUpdate3
+    use spmdMod        , only : masterproc
+    use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+   !-------------------added Hg end------------------------------------
     use NutrientCompetitionMethodMod      , only: nutrient_competition_method_type
     use CNRootDynMod                      , only: CNRootDyn
     use CNPrecisionControlMod             , only: CNPrecisionControl
@@ -170,6 +187,8 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_Hgflux_type)        , intent(inout) :: soilbiogeochem_Hgflux_inst
+    type(soilbiogeochem_Hgstate_type)       , intent(inout) :: soilbiogeochem_HgState_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
     type(waterflux_type)                    , intent(inout)    :: waterflux_inst
@@ -190,6 +209,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
     real(r8):: p_decomp_cpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
+    real(r8):: p_decomp_hgpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !added hg: potential hg loss from one pool to another
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for use_crop)
     real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
@@ -271,6 +291,13 @@ contains
     call CNNDeposition(bounds, &
          atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
     call t_stopf('CNDeposition')
+
+    !added Hg deposition--------------------------------------------------
+    call t_startf('HgDeposition')
+    call HgDeposition(bounds, &
+         atm2lnd_inst, soilbiogeochem_Hgflux_inst)
+    call t_stopf('HgDeposition')
+
     
     if(use_fun)then
         call t_startf('CNFLivFixation')
@@ -315,11 +342,17 @@ contains
             canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
 
+!if (masterproc) then
+       !write(iulog,*)' : The value of decomposed carbon = ',decomposed_carbon
+!end if 
+
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
     call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
+         soilbiogeochem_hgstate_inst,                                                                                 &
          cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
+         p_decomp_hgpool_loss=p_decomp_hgpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
          p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
          pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
 
@@ -433,8 +466,10 @@ contains
     call SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                                       &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
+         soilbiogeochem_hgflux_inst,                                                                                  &
          cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools),                       & 
          p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+         p_decomp_hgpool_loss=p_decomp_hgpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), & !added hg
          pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
 
     call t_stopf('SoilBiogeochemDecomp')
@@ -587,6 +622,15 @@ contains
          soilbiogeochem_state_inst, soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemStateUpdate1')
 
+    !-----------------------------------------added Hg-------------------------------------
+
+    call t_startf('SoilBiogeochem_Hg_StateUpdate1')
+    call SoilBiogeochemHgStateUpdate1(bounds,num_soilc, filter_soilc,  &
+       soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,atm2lnd_inst , soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_nitrogenstate_inst,soilbiogeochem_carbonstate_inst,soilbiogeochem_carbonflux_inst,&
+       cnveg_carbonflux_inst,photosyns_inst, waterstate_inst, waterflux_inst,canopystate_inst,dgvs_inst,num_soilp,filter_soilp)
+    call t_stopf('SoilBiogeochem_Hg_StateUpdate1')
+   !-------------------------------------------added Hg end--------------------------------------
 
     !--------------------------------------------
     ! Calculate vertical mixing of soil and litter pools
@@ -597,9 +641,10 @@ contains
     call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
          canopystate_inst, soilbiogeochem_state_inst,                             &
          soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
+         soilbiogeochem_hgflux_inst, soilbiogeochem_hgstate_inst                  &
          c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)   
 
     call t_stopf('SoilBiogeochemLittVertTransp')
 
@@ -827,6 +872,16 @@ contains
        call t_stopf('CNPrecisionControl')
     end if
 
+    !-------------------------------------------added hg----------------------------------------------
+     call t_startf('SoilBiogeochem_Hg_StateUpdate3')
+
+     call SoilBiogeochemHgStateUpdate3(bounds,num_soilc, filter_soilc,&
+          soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,&
+          soilbiogeochem_nitrogenflux_inst,&
+          soilbiogeochem_carbonstate_inst,soilbiogeochem_carbonflux_inst,cnveg_state_inst,totsomHg_col=soilbiogeochem_Hgstate_inst%totsomHg_col(begc:endc))
+     call t_stopf('SoilBiogeochem_Hg_StateUpdate3')
+!------------------------------------------added end -------------------------------------------------------------------------------
+
     end associate
 
   end subroutine CNDriverNoLeaching
@@ -845,6 +900,9 @@ contains
     ! !USES:
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
     use CNNStateUpdate3Mod   , only: NStateUpdate3
+    use SoilBiogeochemHgLeachingMod, only: SoilBiogeochemHgLeaching
+    use SoilBiogeochemHgStateUpdate3Mod,          only: SoilBiogeochemHgStateUpdate3
+    !use HgStateUpdate3Mod          , only: HgStateUpdate3
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -858,6 +916,8 @@ contains
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !type(soilbiogeochem_Hgflux_type)  , intent(inout) :: soilbiogeochem_hgflux_inst
+    !type(soilbiogeochem_Hgstate_type) , intent(inout) :: soilbiogeochem_hgstate_inst
     !-----------------------------------------------------------------------
   
     ! Mineral nitrogen dynamics (deposition, fixation, leaching)
@@ -867,6 +927,17 @@ contains
          waterstate_inst, waterflux_inst, soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
     call t_stopf('SoilBiogeochemNLeaching')
+
+       !-----------------------------------added hg-------------------------------------
+
+     !Hg leaching
+    !call t_startf('SoilBiogeochemHgLeaching')
+    !call SoilBiogeochemHgLeaching(bounds, num_soilc, filter_soilc, &
+         !waterstate_inst, waterflux_inst, soilbiogeochem_Hgstate_inst, &
+        ! soilbiogeochem_Hgflux_inst)
+    !call t_stopf('SoilBiogeochemHgLeaching')
+     
+  !-----------------------------------added end-------------------------------------
 
     ! Nitrogen state variable update, mortality fluxes.
 
@@ -889,6 +960,7 @@ contains
        c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_nitrogenstate_inst, &
+       soilbiogeochem_Hgstate_inst,          &
        c_products_inst, c13_products_inst, c14_products_inst)
     !
     ! !DESCRIPTION:
@@ -915,6 +987,7 @@ contains
     type(cn_products_type)                  , intent(in)    :: c_products_inst
     type(cn_products_type)                  , intent(in)    :: c13_products_inst
     type(cn_products_type)                  , intent(in)    :: c14_products_inst
+    type(soilbiogeochem_Hgstate_type)       , intent(inout) :: soilbiogeochem_Hgstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
@@ -938,6 +1011,8 @@ contains
        call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
     end if
     call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc)
+
+    call soilbiogeochem_Hgstate_inst%summary(bounds, num_allc, filter_allc)
 
     ! ----------------------------------------------
     ! cnveg carbon/nitrogen state summary
@@ -983,6 +1058,9 @@ contains
        cnveg_nitrogenflux_inst, &
        c_products_inst, c13_products_inst, c14_products_inst, &
        soilbiogeochem_carbonflux_inst, &
+       photosyns_inst,                   &
+       soilbiogeochem_hgflux_inst,soilbiogeochem_hgstate_inst, &
+       soilbiogeochem_state_inst,soilbiogeochem_carbonstate_inst
        c13_soilbiogeochem_carbonflux_inst, &
        c14_soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenflux_inst)
@@ -1010,6 +1088,12 @@ contains
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_hgflux_type)        , intent(inout) :: soilbiogeochem_hgflux_inst
+    type(soilbiogeochem_Hgstate_type)       , intent(inout) :: soilbiogeochem_Hgstate_inst
+    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(photosyns_type)                  , intent(in)    :: photosyns_inst
+ 
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
@@ -1035,6 +1119,10 @@ contains
        call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
     end if
     call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
+    
+      !------------------------adeed hg--------------------------------------------
+    call soilbiogeochem_hgflux_inst%Summary(bounds, num_soilc, filter_soilc,photosyns_inst)
+   !---------------------------added end----------------------------------------
 
     ! ----------------------------------------------
     ! cnveg carbon/nitrogen flux summary
@@ -1071,6 +1159,8 @@ contains
     call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     call t_stopf('CNsum')
+
+    !hg state update since fire
 
   end subroutine CNDriverSummarizeFluxes
 

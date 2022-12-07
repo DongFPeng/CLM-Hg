@@ -15,6 +15,8 @@ module SoilBiogeochemLittVertTranspMod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemhgFluxType           , only : soilbiogeochem_hgflux_type
+  use SoilBiogeochemhgStateType          , only : soilbiogeochem_hgstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
@@ -90,6 +92,7 @@ contains
   subroutine SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,      &
        canopystate_inst, soilbiogeochem_state_inst,                     &
        soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
+       soilbiogeochem_hgstate_inst, soilbiogeochem_hgflux_inst,         &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
@@ -123,6 +126,8 @@ contains
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_hgstate_type)       , intent(inout) :: soilbiogeochem_hgstate_inst
+    type(soilbiogeochem_hgflux_type)        , intent(inout) :: soilbiogeochem_hgflux_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: diffus (bounds%begc:bounds%endc,1:nlevdecomp+1)                    ! diffusivity (m2/s)  (includes spinup correction, if any)
@@ -135,6 +140,7 @@ contains
     real(r8) :: b_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)                      ! "b" vector for tridiagonal matrix
     real(r8) :: c_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)                      ! "c" vector for tridiagonal matrix
     real(r8) :: r_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)                      ! "r" vector for tridiagonal solution
+    real(r8) :: r_tri_hg(bounds%begc:bounds%endc,0:nlevdecomp+1)
     real(r8) :: d_p1_zp1(bounds%begc:bounds%endc,1:nlevdecomp+1)                   ! diffusivity/delta_z for next j  (set to zero for no diffusion)
     real(r8) :: d_m1_zm1(bounds%begc:bounds%endc,1:nlevdecomp+1)                   ! diffusivity/delta_z for previous j (set to zero for no diffusion)
     real(r8) :: f_p1(bounds%begc:bounds%endc,1:nlevdecomp+1)                       ! water flux for next j
@@ -143,6 +149,7 @@ contains
     real(r8) :: pe_m1(bounds%begc:bounds%endc,1:nlevdecomp+1)                      ! Peclet # for previous j
     real(r8) :: dz_node(1:nlevdecomp+1)                                            ! difference between nodes
     real(r8) :: epsilon_t (bounds%begc:bounds%endc,1:nlevdecomp+1,1:ndecomp_pools) !
+    real(r8) :: conc_trcr_hg(bounds%begc:bounds%endc,0:nlevdecomp+1) 
     real(r8) :: conc_trcr(bounds%begc:bounds%endc,0:nlevdecomp+1)                  !
     real(r8) :: a_p_0
     real(r8) :: deficit
@@ -154,6 +161,8 @@ contains
     real(r8) :: spinup_term                                                        ! spinup accelerated decomposition factor, used to accelerate transport as well
     real(r8) :: epsilon                                                            ! small number
     real(r8), pointer :: conc_ptr(:,:,:)                                           ! pointer, concentration state variable being transported
+    real(r8), pointer :: conc_ptr_hg(:,:,:)
+    real(r8), pointer :: source_hg(:,:,:) 
     real(r8), pointer :: source(:,:,:)                                             ! pointer, source term
     real(r8), pointer :: trcr_tendency_ptr(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
     !-----------------------------------------------------------------------
@@ -250,7 +259,9 @@ contains
          select case (i_type)
          case (1)  ! C
             conc_ptr          => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col
+            conc_ptr_hg       => soilbiogeochem_hgstate_inst%decomp_hgpools_vr_col
             source            => soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col
+            source_hg         => soilbiogeochem_hgflux_inst%decomp_hgpools_sourcesink_col
             trcr_tendency_ptr => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
          case (2)  ! N
             if (use_cn ) then
@@ -324,6 +335,8 @@ contains
                      c = filter_soilc (fc)
                      conc_trcr(c,0) = 0._r8
                      conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
+                     conc_trcr_hg(c,0) = 0._r8
+                     conc_trcr_hg(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
                   end do
 
 
@@ -332,6 +345,7 @@ contains
                         c = filter_soilc (fc)
 
                         conc_trcr(c,j) = conc_ptr(c,j,s)
+                        conc_trcr_hg(c,j) = conc_ptr_hg(c,j,s)
                   
                         ! dz_tracer below is the difference between gridcell edges  (dzsoi_decomp)
                         ! dz_node_tracer is difference between cell centers 
@@ -405,21 +419,25 @@ contains
                            b_tri(c,j) = 1._r8
                            c_tri(c,j) = -1._r8
                            r_tri(c,j) = 0._r8
+                           r_tri_hg(c,j) = 0._r8
                         elseif (j == 1) then
                            a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = -a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j) 
+                           r_tri_hg(c,j) = source_hg(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr_hg(c,j)
                         elseif (j < nlevdecomp+1) then
                            a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = -a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
+                           r_tri_hg(c,j) = source_hg(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr_hg(c,j)
                         else ! j==nlevdecomp+1; 0 concentration gradient at bottom
                            a_tri(c,j) = -1._r8
                            b_tri(c,j) = 1._r8
                            c_tri(c,j) = 0._r8 
                            r_tri(c,j) = 0._r8
+                           r_tri_hg(c,j) = 0._r8
                         endif
                      enddo ! fc; column
                   enddo ! j; nlevdecomp
@@ -447,6 +465,15 @@ contains
                        r_tri(bounds%begc:bounds%endc, :), &
                        conc_trcr(bounds%begc:bounds%endc,0:nlevdecomp+1))
 
+                  call Tridiagonal(bounds, 0, nlevdecomp+1, &
+                       jtop(bounds%begc:bounds%endc), &
+                       num_soilc, filter_soilc, &
+                       a_tri(bounds%begc:bounds%endc, :), &
+                       b_tri(bounds%begc:bounds%endc, :), &
+                       c_tri(bounds%begc:bounds%endc, :), &
+                       r_tri_hg(bounds%begc:bounds%endc, :), &
+                       conc_trcr_hg(bounds%begc:bounds%endc,0:nlevdecomp+1))
+
                   ! add post-transport concentration to calculate tendency term
                   do fc = 1, num_soilc
                      c = filter_soilc (fc)
@@ -462,6 +489,7 @@ contains
                      do fc = 1, num_soilc
                         c = filter_soilc (fc)
                         conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
+                        conc_trcr_hg(c,j) = conc_ptr_hg(c,j,s) + source_hg(c,j,s)
                         if (j > col%nbedrock(c) .and. source(c,j,s) > 0._r8) then 
                            write(iulog,*) 'source >0',c,j,s,source(c,j,s)
                         end if
@@ -478,11 +506,15 @@ contains
                   do fc = 1, num_soilc
                      c = filter_soilc (fc)
                      conc_ptr(c,j,s) = conc_trcr(c,j) 
+                     conc_ptr_hg(c,j,s) = conc_trcr_hg(c,j) 
                      ! Correct for small amounts of carbon that leak into bedrock
                      if (j > col%nbedrock(c)) then 
                         conc_ptr(c,col%nbedrock(c),s) = conc_ptr(c,col%nbedrock(c),s) + &
                            conc_trcr(c,j) * (dzsoi_decomp(j) / dzsoi_decomp(col%nbedrock(c)))
                         conc_ptr(c,j,s) = 0._r8
+                        conc_ptr_hg(c,col%nbedrock(c),s) = conc_ptr_hg(c,col%nbedrock(c),s) + &
+                           conc_trcr_hg(c,j) * (dzsoi_decomp(j) / dzsoi_decomp(col%nbedrock(c)))
+                        conc_ptr_hg(c,j,s) = 0._r8
                      end if
                   end do
                end do
@@ -498,6 +530,7 @@ contains
                      c = filter_soilc (fc)
 
                      conc_ptr(c,j,l) = conc_ptr(c,j,l) + source(c,j,l)
+                     conc_ptr_hg(c,j,l) = conc_ptr_hg(c,j,l) + source_hg(c,j,l)
 
                      trcr_tendency_ptr(c,j,l) = 0._r8
 

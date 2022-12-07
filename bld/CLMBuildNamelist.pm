@@ -1647,6 +1647,23 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+#-----------added Hg----------------------------------------------------
+ ###############################
+  # namelist group: hg0depdyn_nml #
+  ###############################
+  setup_logic_hg0_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ###############################
+  # namelist group: hg2depdyn_nml #
+  ###############################
+  setup_logic_hg2_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ###############################
+  # namelist group: hg2_dry_depdyn_nml #
+  ###############################
+  setup_logic_hg2_dry_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+ #-----------added Hg end----------------------------------------------------
+
   ##########################################
   # namelist group: soil_moisture_streams  #
   ##########################################
@@ -3293,7 +3310,231 @@ sub setup_logic_nitrogen_deposition {
   }
 }
 
+#------------------------------added Hg-------------------------------------------------
 
+sub setup_logic_hg0_deposition {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # Nitrogen deposition for bgc=CN
+  #
+
+  if ( $physv->as_long() == $physv->as_long("clm4_0") && $nl_flags->{'bgc_mode'} ne "none" ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg0depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg0dep') != $nl->get_value('stream_year_last_hg0dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg0dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                'hgrid'=>"1.9x2.5" );
+
+  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg0depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg0dep_taxmode', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg0dep_varlist', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg0dep') != $nl->get_value('stream_year_last_hg0dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg0dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+    if ( ! defined($nl->get_value('stream_fldfilename_hg0dep') ) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg0dep', 'phys'=>$nl_flags->{'phys'},
+                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+    }
+  } else {
+    # If bgc is NOT CN/CNDV then make sure none of the hg0dep settings are set!
+    if ( defined($nl->get_value('stream_year_first_hg0dep')) ||
+         defined($nl->get_value('stream_year_last_hg0dep'))  ||
+         defined($nl->get_value('model_year_align_hg0dep'))  ||
+         defined($nl->get_value('hg0dep_taxmode'         ))  ||
+         defined($nl->get_value('hg0dep_varlist'         ))  ||
+         defined($nl->get_value('stream_fldfilename_hg0dep'))
+       ) {
+      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_hg0dep," .
+                  "stream_year_last_hg0dep, model_year_align_hg0dep, hg0dep_taxmod, " .
+                  "hg0dep_varlist, nor stream_fldfilename_hg0dep" .
+                  " can be set!");
+    }
+  }
+}
+
+sub setup_logic_hg2_deposition {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # Nitrogen deposition for bgc=CN
+  #
+
+  if ( $physv->as_long() == $physv->as_long("clm4_0") && $nl_flags->{'bgc_mode'} ne "none" ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg2dep') != $nl->get_value('stream_year_last_hg2dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg2dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                'hgrid'=>"1.9x2.5" );
+
+  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2dep_taxmode', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2dep_varlist', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg2dep') != $nl->get_value('stream_year_last_hg2dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg2dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+    if ( ! defined($nl->get_value('stream_fldfilename_hg2dep') ) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2dep', 'phys'=>$nl_flags->{'phys'},
+                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+    }
+  } else {
+    # If bgc is NOT CN/CNDV then make sure none of the hg2dep settings are set!
+    if ( defined($nl->get_value('stream_year_first_hg2dep')) ||
+         defined($nl->get_value('stream_year_last_hg2dep'))  ||
+         defined($nl->get_value('model_year_align_hg2dep'))  ||
+         defined($nl->get_value('hg2dep_taxmode'         ))  ||
+         defined($nl->get_value('hg2dep_varlist'         ))  ||
+         defined($nl->get_value('stream_fldfilename_hg2dep'))
+       ) {
+      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_hg2dep," .
+                  "stream_year_last_hg2dep, model_year_align_hg2dep, hg2dep_taxmod, " .
+                  "hg2dep_varlist, nor stream_fldfilename_hg2dep" .
+                  " can be set!");
+    }
+  }
+}
+
+sub setup_logic_hg2_dry_deposition {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # Nitrogen deposition for bgc=CN
+  #
+
+  if ( $physv->as_long() == $physv->as_long("clm4_0") && $nl_flags->{'bgc_mode'} ne "none" ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2_dry_depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg2_dry_dep') != $nl->get_value('stream_year_last_hg2_dry_dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg2_dry_dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                'hgrid'=>"1.9x2.5" );
+
+  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2_dry_depmapalgo', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2_dry_dep_taxmode', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hg2_dry_dep_varlist', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_hg2_dry_dep') != $nl->get_value('stream_year_last_hg2_dry_dep') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_hg2_dry_dep', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+    if ( ! defined($nl->get_value('stream_fldfilename_hg2_dry_dep') ) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_hg2_dry_dep', 'phys'=>$nl_flags->{'phys'},
+                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+    }
+  } else {
+    # If bgc is NOT CN/CNDV then make sure none of the hg2_dry_dep settings are set!
+    if ( defined($nl->get_value('stream_year_first_hg2_dry_dep')) ||
+         defined($nl->get_value('stream_year_last_hg2_dry_dep'))  ||
+         defined($nl->get_value('model_year_align_hg2_dry_dep'))  ||
+         defined($nl->get_value('hg2_dry_dep_taxmode'         ))  ||
+         defined($nl->get_value('hg2_dry_dep_varlist'         ))  ||
+         defined($nl->get_value('stream_fldfilename_hg2_dry_dep'))
+       ) {
+      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_hg2_dry_dep," .
+                  "stream_year_last_hg2_dry_dep, model_year_align_hg2_dry_dep, hg2_dry_dep_taxmod, " .
+                  "hg2_dry_dep_varlist, nor stream_fldfilename_hg2_dry_dep" .
+                  " can be set!");
+    }
+  }
+}
+
+#-------------------------------------------added Hg end------------------------------------
 #-----------------------------------------------------------------------------------
 sub setup_logic_cnmresp {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
@@ -3939,11 +4180,11 @@ sub write_output_files {
     @groups = qw(clm_inparm);
     # Eventually only list namelists that are actually used when CN on
     #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {
-      push @groups, "ndepdyn_nml", "erosion_nml";
+      push @groups, "ndepdyn_nml", "erosion_nml", "ndepdyn_nml" , "hg0depdyn_nml" , "hg2depdyn_nml", "hg2_dry_depdyn_nml";
     #}
   } else {
 
-    @groups = qw(clm_inparm erosion_nml ndepdyn_nml popd_streams urbantv_streams light_streams
+    @groups = qw(clm_inparm erosion_nml ndepdyn_nml hg0depdyn_nml hg2depdyn_nml hg2_dry_depdyn_nml popd_streams urbantv_streams light_streams
                  soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                  finidat_consistency_checks dynpft_consistency_checks 

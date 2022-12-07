@@ -36,4 +36,99 @@
 <stream_year_first_urbantv phys="clm4_5" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5" >2000</stream_year_last_urbantv>
 
+<!-- added hg0 -->
+<stream_year_first_hg0dep phys="clm4_0" bgc="cn"   >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm4_0" bgc="cn"   >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep phys="clm4_0" bgc="cndv" >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm4_0" bgc="cndv" >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep phys="clm4_5" use_cn=".true." >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm4_5" use_cn=".true." >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg0dep>
+
+<stream_year_first_hg0dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg0dep>
+<stream_year_last_hg0dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg0dep>
+
+
+<!-- Use single year hg0dep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
+<stream_fldfilename_hg0dep phys="clm5_0" use_cn=".true."
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+
+<stream_fldfilename_hg0dep phys="clm4_5" use_cn=".true."
+>lnd/clm2/hg0depdata/myhg0dep_12mon.nc</stream_fldfilename_hg0dep>
+ 
+<hg0dep_taxmode            phys="clm5_0" use_cn=".true." >cycle</hg0dep_taxmode>
+
+<hg0dep_varlist            phys="clm5_0" use_cn=".true." >hg0dep_month</hg0dep_varlist>
+<!-- added end of hg0-->
+
+
+<!-- added hg2 -->
+<stream_year_first_hg2dep phys="clm4_0" bgc="cn"   >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm4_0" bgc="cn"   >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep phys="clm4_0" bgc="cndv" >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm4_0" bgc="cndv" >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep phys="clm4_5" use_cn=".true." >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm4_5" use_cn=".true." >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg2dep>
+
+<stream_year_first_hg2dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg2dep>
+<stream_year_last_hg2dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg2dep>
+
+
+<!-- Use single year hg2dep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
+<stream_fldfilename_hg2dep phys="clm5_0" use_cn=".true."
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+
+<stream_fldfilename_hg2dep phys="clm4_5" use_cn=".true."
+>lnd/clm2/hg2depdata/myhg2dep_12mon.nc</stream_fldfilename_hg2dep>
+ 
+<hg2dep_taxmode            phys="clm5_0" use_cn=".true." >cycle</hg2dep_taxmode>
+
+<hg2dep_varlist            phys="clm5_0" use_cn=".true." >hg2dep_month</hg2dep_varlist>
+
+<!--added end of hg2 -->
+
+
+
+
+<!-- added hg2_dry-->
+<stream_year_first_hg2_dry_dep phys="clm4_0" bgc="cn"   >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm4_0" bgc="cn"   >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep phys="clm4_0" bgc="cndv" >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm4_0" bgc="cndv" >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep phys="clm4_5" use_cn=".true." >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm4_5" use_cn=".true." >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg2_dry_dep>
+
+<stream_year_first_hg2_dry_dep phys="clm5_0" use_cn=".true." >2000</stream_year_first_hg2_dry_dep>
+<stream_year_last_hg2_dry_dep  phys="clm5_0" use_cn=".true." >2000</stream_year_last_hg2_dry_dep>
+
+
+<!-- Use single year hg2_dry_dep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
+<stream_fldfilename_hg2_dry_dep phys="clm5_0" use_cn=".true."
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+
+<stream_fldfilename_hg2_dry_dep phys="clm4_5" use_cn=".true."
+>lnd/clm2/hg2_dry_depdata/myhg2_dry_dep_12mon.nc</stream_fldfilename_hg2_dry_dep>
+ 
+<hg2_dry_dep_taxmode            phys="clm5_0" use_cn=".true." >cycle</hg2_dry_dep_taxmode>
+
+<hg2_dry_dep_varlist            phys="clm5_0" use_cn=".true." >hg2_dry_dep_month</hg2_dry_dep_varlist>
+
+<!-- added end of hg2_dry-->
+
+
+
 </namelist_defaults>

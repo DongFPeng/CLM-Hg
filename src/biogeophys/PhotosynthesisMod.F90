@@ -34,6 +34,7 @@ module  PhotosynthesisMod
   use LandunitType        , only : lun
   use PatchType           , only : patch
   use GridcellType        , only : grc
+  use subgridAveMod       , only: p2c, c2g
   !
   implicit none
   private
@@ -170,6 +171,10 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: rssha_z_patch     (:,:) ! patch canopy layer: shaded leaf stomatal resistance (s/m)
      real(r8), pointer, public  :: rssun_patch       (:)   ! patch sunlit stomatal resistance (s/m)
      real(r8), pointer, public  :: rssha_patch       (:)   ! patch shaded stomatal resistance (s/m)
+
+     real(r8), pointer, public  :: rs_hg_patch       (:)   ! patch shaded stomatal resistance (s/m)
+     real(r8), pointer, public  :: fstom_hg_patch       (:)   ! leaf stomal conductance (s/m)
+
      real(r8), pointer, public  :: luvcmax25top_patch (:)   ! vcmax25 !     (umol/m2/s)
      real(r8), pointer, public  :: lujmax25top_patch  (:)   ! vcmax25 (umol/m2/s)
      real(r8), pointer, public  :: lutpu25top_patch   (:)   ! vcmax25 (umol/m2/s)
@@ -312,6 +317,10 @@ contains
     allocate(this%rssha_z_patch     (begp:endp,1:nlevcan)) ; this%rssha_z_patch     (:,:) = nan
     allocate(this%rssun_patch       (begp:endp))           ; this%rssun_patch       (:)   = nan
     allocate(this%rssha_patch       (begp:endp))           ; this%rssha_patch       (:)   = nan
+
+    allocate(this%rs_hg_patch       (begp:endp))           ; this%rs_hg_patch       (:)   = nan
+    allocate(this%fstom_hg_patch       (begp:endp))           ; this%fstom_hg_patch       (:)   = nan
+
     allocate(this%luvcmax25top_patch(begp:endp))           ; this%luvcmax25top_patch(:) = nan
     allocate(this%lujmax25top_patch (begp:endp))           ; this%lujmax25top_patch(:)  = nan
     allocate(this%lutpu25top_patch  (begp:endp))           ; this%lutpu25top_patch(:)   = nan
@@ -465,6 +474,16 @@ contains
     call hist_addfld1d (fname='RSSHA', units='s/m',  &
          avgflag='M', long_name='shaded leaf stomatal resistance', &
          ptr_patch=this%rssha_patch, set_lake=spval, set_urb=spval)
+
+    this%rs_hg_patch(begp:endp) = spval
+    call hist_addfld1d (fname='rs_hg', units='s/m',  &
+         avgflag='M', long_name=' leaf stomatal resistance of hg', &
+         ptr_patch=this%rs_hg_patch, set_lake=spval, set_urb=spval)
+     
+    this%fstom_hg_patch(begp:endp) = spval
+    call hist_addfld1d (fname='fstom_hg', units='s/m',  &
+         avgflag='X', long_name=' leaf stomatal conductance of hg', &
+         ptr_patch=this%fstom_hg_patch, set_lake=spval, set_urb=spval)
 
     this%gs_mol_sun_patch(begp:endp,:) = spval
     this%gs_mol_sha_patch(begp:endp,:) = spval
