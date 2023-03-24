@@ -349,11 +349,11 @@ contains
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
     call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
          soilbiogeochem_hgstate_inst,                                                                                 &
-         cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
-         p_decomp_hgpool_loss=p_decomp_hgpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
+         cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools),                                     & 
+         p_decomp_hgpool_loss=p_decomp_hgpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions),             &
+         p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions),               &
          pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
 
     ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
@@ -638,14 +638,13 @@ contains
 
     call t_startf('SoilBiogeochemLittVertTransp')
 
-    call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         canopystate_inst, soilbiogeochem_state_inst,                             &
-         soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
-         soilbiogeochem_hgflux_inst, soilbiogeochem_hgstate_inst                  &
-         c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
-         c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)   
-
+    call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,      &
+       canopystate_inst, soilbiogeochem_state_inst,                     &
+       soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
+       soilbiogeochem_hgstate_inst, soilbiogeochem_hgflux_inst,         &
+       c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
+       c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     call t_stopf('SoilBiogeochemLittVertTransp')
 
     !--------------------------------------------
@@ -817,11 +816,13 @@ contains
 
 
     if ( ero_ccycle ) then
+      call t_startf('erosionflux')
      call ErosionFluxes(bounds, num_soilc, filter_soilc, &
           soilstate_inst, sedflux_vars, cnveg_carbonstate_inst, cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,   &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                                        &              
           cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                                             &
-          soilbiogeochem_nitrogenflux_inst)
+          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst)
+     call t_stopf('erosionflux')
     end if
 
 
@@ -1060,7 +1061,7 @@ contains
        soilbiogeochem_carbonflux_inst, &
        photosyns_inst,                   &
        soilbiogeochem_hgflux_inst,soilbiogeochem_hgstate_inst, &
-       soilbiogeochem_state_inst,soilbiogeochem_carbonstate_inst
+       soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, &
        c14_soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenflux_inst)

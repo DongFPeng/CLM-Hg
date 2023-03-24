@@ -15,8 +15,8 @@ module SoilBiogeochemLittVertTranspMod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemhgFluxType           , only : soilbiogeochem_hgflux_type
-  use SoilBiogeochemhgStateType          , only : soilbiogeochem_hgstate_type
+  use SoilbiogeochemHgFluxType           , only : soilbiogeochem_Hgflux_type
+  use SoilBiogeochemHgStateType          , only : soilbiogeochem_Hgstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc

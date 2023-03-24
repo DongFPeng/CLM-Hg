@@ -244,29 +244,29 @@ contains
                         gcbr_p(patch%itype(p))*Broot ) 
 
                      ! write temp records for few paramerters
-                     open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/test_erosion_v2_checkEQ1/run/variables.log')
-                     write(10,*)  '####'
-                     write(10,*)  'dtime=', dtime
-                     write(10,*)  'forc_rain(c)', forc_rain(c)
-                     write(10,*)  'qflx_dirct_rain(p)', qflx_dirct_rain(p)
-                     write(10,*)  'qflx_leafdrip(p)', qflx_leafdrip(p)
-                     write(10,*)  'Dl', Dl
-                     write(10,*)  'fgrvl(c,1)=', fgrvl(c,1) 
-                     write(10,*)  'Ptot=', Ptot
-                     write(10,*)  'Ie=', Ie
-                     write(10,*)  'cheight=', cheight
-                     write(10,*)  'KE_LD', KE_LD
-                     write(10,*)  'KE_DT=', KE_DT
-                     write(10,*)  'Clai=', Clai
-                     write(10,*)  'PCT_gnd=', PCT_gnd
-                     write(10,*)  'Broot=', Broot
-                     write(10,*)  'fgndcov=', fgndcov
-                     write(10,*)  'K=', K
-                     write(10,*)  'pfactor(c)=', pfactor(c)
-                     write(10,*)  'flitho=', flitho
-                     write(10,*)  'ftillage=', ftillage
-                     write(10,*)  'patch%wtcol(p)=', patch%wtcol(p)
-                     write(10,*)  '####'
+                     !open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/test_erosion_v2_checkEQ1/run/variables.log')
+                     !write(10,*)  '####'
+                     !write(10,*)  'dtime=', dtime
+                     !write(10,*)  'forc_rain(c)', forc_rain(c)
+                     !write(10,*)  'qflx_dirct_rain(p)', qflx_dirct_rain(p)
+                     !write(10,*)  'qflx_leafdrip(p)', qflx_leafdrip(p)
+                     !write(10,*)  'Dl', Dl
+                     !write(10,*)  'fgrvl(c,1)=', fgrvl(c,1) 
+                     !write(10,*)  'Ptot=', Ptot
+                     !write(10,*)  'Ie=', Ie
+                     !write(10,*)  'cheight=', cheight
+                     !write(10,*)  'KE_LD', KE_LD
+                     !write(10,*)  'KE_DT=', KE_DT
+                     !write(10,*)  'Clai=', Clai
+                     !write(10,*)  'PCT_gnd=', PCT_gnd
+                     !write(10,*)  'Broot=', Broot
+                     !write(10,*)  'fgndcov=', fgndcov
+                     !write(10,*)  'K=', K
+                     !write(10,*)  'pfactor(c)=', pfactor(c)
+                     !write(10,*)  'flitho=', flitho
+                     !write(10,*)  'ftillage=', ftillage
+                     !write(10,*)  'patch%wtcol(p)=', patch%wtcol(p)
+                     !write(10,*)  '####'
 
                      !check cropland or not
                      if( patch%itype(p) > nc4_grass )then

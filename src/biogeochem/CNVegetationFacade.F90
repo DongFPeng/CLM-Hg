@@ -732,8 +732,8 @@ contains
     ! This call fixes issue #741 by performing precision control on decomp_cpools_vr_col
     call t_startf('SoilBiogeochemPrecisionControl')
     call SoilBiogeochemPrecisionControl(num_soilc_with_inactive, filter_soilc_with_inactive,  &
-         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, soilbiogeochem_Hgstate_inst, &
-         c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_Hgstate_inst)
     call t_stopf('SoilBiogeochemPrecisionControl')
 
     call t_startf('dyn_cnbal_col')
@@ -783,19 +783,16 @@ contains
     character(len=*), parameter :: subname = 'InitColumnBalance'
     !-----------------------------------------------------------------------
 
-    call CNDriverSummarizeStates(bounds, &
-         num_allc, filter_allc, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         this%cnveg_carbonstate_inst, &
-         this%c13_cnveg_carbonstate_inst, &
-         this%c14_cnveg_carbonstate_inst, &
-         this%cnveg_nitrogenstate_inst, &
-         soilbiogeochem_carbonstate_inst, &
-         c13_soilbiogeochem_carbonstate_inst, &
-         c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_Hgstate_inst, &
-         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
+    call CNDriverSummarizeStates(bounds, num_allc, filter_allc, &
+      num_soilc, filter_soilc, num_soilp, filter_soilp, &
+      this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
+      this%cnveg_nitrogenstate_inst, &
+      soilbiogeochem_carbonstate_inst, &
+      c13_soilbiogeochem_carbonstate_inst, &
+      c14_soilbiogeochem_carbonstate_inst, &
+      soilbiogeochem_nitrogenstate_inst, &
+      soilbiogeochem_Hgstate_inst,          &
+      this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call this%cn_balance_inst%BeginCNBalance( &
          bounds, num_soilc, filter_soilc, &
@@ -809,7 +806,7 @@ contains
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        num_pcropp, filter_pcropp, &
-       doalb, num_soilc_with_inactive, filter_soilc_with_inactive, &
+       doalb, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -839,8 +836,8 @@ contains
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
-    integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
-    integer                                 , intent(in)    :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
+    !integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
+    !integer                                 , intent(in)    :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -875,26 +872,23 @@ contains
 
     call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
 
-    call CNDriverNoLeaching(bounds,                                         &
-         num_soilc, filter_soilc,                       &
-         num_soilp, filter_soilp,                       &
-         num_pcropp, filter_pcropp, doalb,              &
-         this%cnveg_state_inst,                                                        &
-         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
-         this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
-         this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst,                   &
-         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst,                       &
-         this%c_products_inst, this%c13_products_inst, this%c14_products_inst,    &
-         this%n_products_inst,                                                    &
-         soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
-         c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-         c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_state_inst,                                               &
-         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-         soilbiogeochem_HgState_inst, soilbiogeochem_Hgflux_inst,                 &
-         atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
-         canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-         this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+    call CNDriverNoLeaching(bounds,                                                    &
+         num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
+         this%cnveg_state_inst,                                                                   &
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                                      &
+         this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                              &
+         this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst,                              &
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst,                                  &
+         this%c_products_inst, this%c13_products_inst, this%c14_products_inst, this%n_products_inst,             &
+         soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
+         c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst,            &
+         c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
+         soilbiogeochem_state_inst,                                                          &
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
+         soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,                            &
+         atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
+         canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
+         this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
          nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm, sedflux_vars)
 
     ! fire carbon emissions 
@@ -986,33 +980,28 @@ contains
 
     ! Call to all CN summary routines
 
-    call  CNDriverSummarizeStates(bounds, &
-         num_allc, filter_allc, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         this%cnveg_carbonstate_inst, &
-         this%c13_cnveg_carbonstate_inst, &
-         this%c14_cnveg_carbonstate_inst, &
+    call  CNDriverSummarizeStates(bounds, num_allc, filter_allc, &
+         num_soilc, filter_soilc, num_soilp, filter_soilp, &
+         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
          this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst, soilbiogeochem_Hgstate_inst)
+         soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_Hgstate_inst,          &
+         this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call  CNDriverSummarizeFluxes(bounds, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         this%cnveg_carbonflux_inst, &
-         this%c13_cnveg_carbonflux_inst, &
-         this%c14_cnveg_carbonflux_inst, &
+         num_soilc, filter_soilc, num_soilp, filter_soilp, &
+         this%cnveg_carbonflux_inst, this%c13_cnveg_carbonflux_inst, this%c14_cnveg_carbonflux_inst, &
          this%cnveg_nitrogenflux_inst, &
          this%c_products_inst, this%c13_products_inst, this%c14_products_inst, &
          soilbiogeochem_carbonflux_inst, &
+         photosyns_inst,                   &
+         soilbiogeochem_hgflux_inst,soilbiogeochem_hgstate_inst, &
+         soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonflux_inst, &
-         photosyns_inst,                     &
-         soilbiogeochem_hgflux_inst,soilbiogeochem_hgstate_inst,&
-         soilbiogeochem_state_inst,soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate

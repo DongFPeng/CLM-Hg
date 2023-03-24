@@ -305,9 +305,10 @@ contains
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
                prior_weights, patch_state_updater, column_state_updater, &
                canopystate_inst, photosyns_inst, &
+               soilbiogeochem_Hgstate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_Hgstate_inst, ch4_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
        end if
 
     end do

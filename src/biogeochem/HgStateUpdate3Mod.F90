@@ -13,8 +13,11 @@ module HgStateUpdate3Mod
   use clm_varpar                      , only : i_cwd, i_met_lit, i_cel_lit, i_lig_lit
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemHgStateType       , only : soilbiogeochem_Hgstate_type
-  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
+  use SoilbiogeochemHgFluxType           , only : soilbiogeochem_Hgflux_type
+  use SoilBiogeochemHgStateType          , only : soilbiogeochem_Hgstate_type
+
+  use clm_varctl       , only : use_erosion, ero_ccycle
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   !
   implicit none
   private
@@ -42,8 +45,8 @@ contains
     integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
     
-    type(soilbiogeochem_hgflux_type)  , intent(in)    :: soilbiogeochem_hgflux_inst
-    type(soilbiogeochem_hgstate_type) , intent(inout) :: soilbiogeochem_hgstate_inst
+    type(soilbiogeochem_hgstate_type)       , intent(inout) :: soilbiogeochem_hgstate_inst
+    type(soilbiogeochem_hgflux_type)        , intent(inout) :: soilbiogeochem_hgflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,k        ! indices
@@ -53,8 +56,8 @@ contains
 
     associate(                                         & 
         
-         hgf => soilbiogeochem_hgflux_inst , & ! Input
-         hgs => soilbiogeochem_hgstate_inst  & ! Output
+         hg_f => soilbiogeochem_hgflux_inst , & ! Input
+         hg_s => soilbiogeochem_hgstate_inst  & ! Output
          )
 
       ! set time steps
@@ -76,6 +79,23 @@ contains
            
          end do ! end of column loop
       end do
+
+      if ( ero_ccycle ) then
+        do l = 1, ndecomp_pools
+           if ( decomp_cascade_con%is_soil(l) ) then
+              do j = 1, nlevdecomp
+                 do fc = 1, num_soilc
+                    c = filter_soilc(fc)
+                    hg_s%decomp_hgpools_vr_col(c,j,l) = hg_s%decomp_hgpools_vr_col(c,j,l) - hg_f%decomp_hgpools_yield_vr(c,j,l) * dt
+                    
+                  if (hg_s%decomp_hgpools_vr_col(c,j,l) <= 0._r8) then
+                     hg_s%decomp_hgpools_vr_col(c,j,l) = 0._r8
+                  end if
+                 end do
+              end do
+           end if
+        end do
+     end if
 
      
 

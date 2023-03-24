@@ -20,6 +20,7 @@ module SoilBiogeochemHgFluxType
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates
   use decompMod      , only : bounds_type
   use PatchType                          , only : patch
+  use clm_varctl                         , only : ero_ccycle
 ! !PUBLIC TYPES:
   implicit none
   private
@@ -50,6 +51,16 @@ module SoilBiogeochemHgFluxType
 
      real(r8), pointer :: rrsun_p2c_col     (:)   !(ghg/m2/s) patch 2 col averaged column-level (p2c)
      real(r8), pointer :: rrsun_tot_col     (:)   ! (ghg/m2/s) total patch-level 
+
+     !erosion flux
+     real(r8), pointer :: somhg_erode                                  (:)     ! total SOM hg detachment (gC/m^2/s)
+     real(r8), pointer :: somhg_deposit                                (:)     ! total SOM hg hillslope redeposition (gC/m^2/s)
+     real(r8), pointer :: somhg_yield                                  (:)     ! total SOM hg loss (gC/m^2/s)
+     real(r8), pointer :: decomp_hgpools_erode                         (:,:)   ! vertically-integrated decomposing hg detachment (gC/m^2/s)
+     real(r8), pointer :: decomp_hgpools_deposit                       (:,:)   ! vertically-integrated decomposing hg hillslope redeposition (gC/m^2/s)
+     real(r8), pointer :: decomp_hgpools_yield                         (:,:)   ! vertically-integrated decomposing hg loss (gC/m^2/s)
+     real(r8), pointer :: decomp_hgpools_yield_vr                      (:,:,:) ! vertically-resolved decomposing hg loss (gC/m^3/s)
+
 
      real(r8), pointer :: hg0_rrsun                   (:)
      real(r8), pointer :: hg_mt_litter                (:)
@@ -103,12 +114,9 @@ module SoilBiogeochemHgFluxType
     begp = bounds%begp; endp = bounds%endp
     allocate(this%decomp_hgpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                  
     this%decomp_hgpools_sourcesink_col(:,:,:)= nan
-  
-    
 
      allocate(this%decomp_cascade_hr_hg_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
      this%decomp_cascade_hr_hg_vr_col(:,:,:)= spval !added hg
-
 
      allocate(this%decomp_cascade_hr_hg_col(begc:endc,1:ndecomp_cascade_transitions))                             
      this%decomp_cascade_hr_hg_col(:,:)= spval
@@ -124,7 +132,7 @@ module SoilBiogeochemHgFluxType
 
      !allocate(this%m_decomp_hgpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
      !this%m_decomp_hgpools_to_fire_vr_col(:,:,:)= nan
-     allocate(this%somhg_fire_col     (begc:endc))                  ; this%somhg_fire_col     (:)   =nan
+    allocate(this%somhg_fire_col     (begc:endc))                  ; this%somhg_fire_col     (:)   =nan
      
     allocate(this%Hg0dep_to_sminn_col                (begc:endc))                   ; this%Hg0dep_to_sminn_col         (:)   = nan
     allocate(this%hg2dep_to_sminn_col               (begc:endc))                   ; this%hg2dep_to_sminn_col        (:)   = nan
@@ -140,6 +148,20 @@ module SoilBiogeochemHgFluxType
     allocate(this%hg0_uptake_fixed                   (begp:endp)) ; this%hg0_uptake_fixed                   (:) = nan
     allocate(this%hg0_reemission_veg                   (begp:endp)) ; this%hg0_reemission_veg          (:) = nan
     allocate(this%hg_mt_litter                   (begp:endp)) ; this%hg_mt_litter                   (:) = nan
+
+    !erosion
+    allocate(this%decomp_hgpools_yield_vr           (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+    this%decomp_hgpools_yield_vr(:,:,:) = nan
+
+    allocate(this%decomp_hgpools_erode               (begc:endc,1:ndecomp_pools)) ; this%decomp_hgpools_erode          (:,:) = nan
+    allocate(this%decomp_hgpools_deposit             (begc:endc,1:ndecomp_pools)) ; this%decomp_hgpools_deposit        (:,:) = nan
+    allocate(this%decomp_hgpools_yield               (begc:endc,1:ndecomp_pools)) ; this%decomp_hgpools_yield          (:,:) = nan
+
+    allocate(this%somhg_erode              (begc:endc)) ; this%somhg_erode              (:) = nan
+    allocate(this%somhg_deposit            (begc:endc)) ; this%somhg_deposit            (:) = nan
+    allocate(this%somhg_yield              (begc:endc)) ; this%somhg_yield              (:) = nan
+
+
   end subroutine InitAllocate  
   !------------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
@@ -176,6 +198,52 @@ module SoilBiogeochemHgFluxType
     !-------------------------------
     ! Hg flux variables - native to column
     !-------------------------------
+    ! add erosion 
+    this%somhg_erode(begc:endc) = spval
+    call hist_addfld1d (fname='SOMHg_ERO', units='gC/m^2/s', &
+          avgflag='A', long_name='SOhg detachment', &
+          ptr_col=this%somhg_erode, default='inactive')
+
+    this%somhg_deposit(begc:endc) = spval
+    call hist_addfld1d (fname='SOMHg_DEP', units='gC/m^2/s', &
+          avgflag='A', long_name='SOhg hillslope redeposition', &
+          ptr_col=this%somhg_deposit, default='inactive')
+
+    this%somhg_yield(begc:endc) = spval
+    call hist_addfld1d (fname='SOMHg_YLD', units='gC/m^2/s', &
+          avgflag='A', long_name='SOHg erosional loss to inland waters', &
+          ptr_col=this%somhg_yield, default='inactive')
+
+    this%decomp_hgpools_erode(begc:endc,:)   = spval
+    this%decomp_hgpools_deposit(begc:endc,:) = spval
+    this%decomp_hgpools_yield(begc:endc,:)   = spval
+    
+    do k = 1, ndecomp_pools
+      if ( decomp_cascade_con%is_soil(k) ) then
+         data1dptr => this%decomp_hgpools_erode(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'Hg_ERO'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' Hg detachment'
+         call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+               avgflag='A', long_name=longname, &
+               ptr_col=data1dptr, default='inactive')
+   
+         data1dptr => this%decomp_hgpools_deposit(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'Hg_DEP'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' Hg hillslope redeposition'
+         call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+               avgflag='A', long_name=longname, &
+               ptr_col=data1dptr, default='inactive')
+   
+         data1dptr => this%decomp_hgpools_yield(:,k)
+         fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'Hg_YLD'
+         longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' Hg erosional loss to inland waters'
+         call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+               avgflag='A', long_name=longname, &
+               ptr_col=data1dptr, default='inactive')
+      endif
+    end do
+
+
     !added Hg
     this%Hg0dep_to_sminn_col(begc:endc) = spval
     call hist_addfld1d (fname='Hg0DEP_TO_SMINN', units='ghg/m^2/s', &
@@ -344,14 +412,8 @@ module SoilBiogeochemHgFluxType
       end if
 
         end do
-
-        
-
      !end if
 
-
-
-!------------------------------------------added hg--------------------------------------------------
    !this%m_decomp_hgpools_to_fire_col(begc:endc,:)      = spval
        !this%m_decomp_hgpools_to_fire_vr_col(begc:endc,:,:) = spval
       ! do k = 1, ndecomp_pools
@@ -476,15 +538,19 @@ module SoilBiogeochemHgFluxType
     end do
 
     do k = 1, ndecomp_pools
-       !do fi = 1,num_column
-         ! i = filter_column(fi)
+       do fi = 1,num_column
+          i = filter_column(fi)
           !this%decomp_cpools_leached_col(i,k) = value_column
-       !end do
+          this%decomp_hgpools_erode(i,k) = value_column
+          this%decomp_hgpools_deposit(i,k) = value_column
+          this%decomp_hgpools_yield(i,k) = value_column
+       end do
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
              i = filter_column(fi)
             ! this%decomp_cpools_transport_tendency_col(i,j,k) = value_column
-             this%decomp_hgpools_sourcesink_col(i,j,k)         = value_column  
+             this%decomp_hgpools_sourcesink_col(i,j,k)         = value_column
+             this%decomp_hgpools_yield_vr(i,j,k) = value_column  
           end do
        end do
     end do
@@ -532,6 +598,10 @@ module SoilBiogeochemHgFluxType
        this%somhg_fire_col(i)     = value_column
        this%rrsun_p2c_col(i)      = value_column
        this%rrsun_tot_col(i)      = value_column
+
+       this%somhg_erode(i)                = value_column
+       this%somhg_deposit(i)              = value_column
+       this%somhg_yield(i)                = value_column
        
        !this%som_c_leached_col(i) = value_column
        !this%somhr_col(i)         = value_column
@@ -579,10 +649,54 @@ module SoilBiogeochemHgFluxType
          !fstom (bounds%begp:bounds%endp), &
          !this%rrsun_p2c_col(bounds%begc:bounds%endc))
 
-  !do fc = 1,num_soilc
-   !   !c = filter_soilc(fc)
-    !this%rrsun_tot_col(c) = this%rrsun_p2c_col(c)
- ! end do 
+    do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         this%somhg_erode(c)         = 0._r8
+         this%somhg_deposit(c)       = 0._r8
+         this%somhg_yield(c)         = 0._r8
+         !this%rrsun_tot_col(c) = this%rrsun_p2c_col(c)
+    end do 
+
+         ! vertically integrate column-level hg erosion flux
+    !if (ero_ccycle) then
+      !do l = 1, ndecomp_pools
+         !do j = 1, nlevdecomp
+            !do fc = 1, num_soilc
+               !c = filter_soilc(fc)
+               !this%decomp_hgpools_yield(c,l) = &
+                    !this%decomp_hgpools_yield(c,l) + &
+                    !this%decomp_hgpools_yield_vr(c,j,l)*dzsoi_decomp(j)
+            !end do
+         !end do
+      !end do
+    !end if
+
+
+     ! column-level hg losses due to soil erosion
+    if ( ero_ccycle ) then
+      do l = 1, ndecomp_pools
+         if ( decomp_cascade_con%is_soil(l) ) then
+            do fc = 1, num_soilc
+               c = filter_soilc(fc)
+               this%somhg_erode(c) = this%somhg_erode(c) + &
+                    this%decomp_hgpools_erode(c,l)
+               this%somhg_deposit(c) = this%somhg_deposit(c) + &
+                    this%decomp_hgpools_deposit(c,l)
+               this%somhg_yield(c) = this%somhg_yield(c) + &
+                    this%decomp_hgpools_yield(c,l)
+            end do
+         end if
+      end do
+    end if
+
+    !open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/clm_hg_test1/run/variables.log')
+    !write(10,*) '####'
+    !write(10,*)  'somhg_yield(c)=', this%somhg_yield(c)
+    !write(10,*)  'somhg_erode(c)=', this%somhg_erode(c)
+    !write(10,*)  'somhg_deposit(c)=', this%somhg_deposit(c)
+    !write(10,*)  'decomp_hgpools_yield(c,l)=', this%decomp_hgpools_yield(c,l)
+    !write(10,*)  'decomp_hgpools_yield_vr(c,j,l)=', this%decomp_hgpools_yield_vr(c,j,l)
+    !write(10,*) '####'
  
 
     !do fc = 1,num_soilc

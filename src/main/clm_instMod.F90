@@ -414,7 +414,7 @@ contains
 
        ! Initialize precision control for soil biogeochemistry
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-                                                c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
+                                                c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_Hgstate_inst)
 
     end if ! end of if use_cn 
 

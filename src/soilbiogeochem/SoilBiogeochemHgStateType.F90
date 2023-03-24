@@ -29,9 +29,6 @@ module SoilBiogeochemHgStateType
 
      real(r8), pointer :: hg_leafout_pools_col        (:)   ! col (gHg/m2)  leaf out Hg pools
      
-
-     real(r8), pointer :: decomp_soiln_vr_col          (:,:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool
-  
      real(r8), pointer :: decomp_hg_rest_vr_col         (:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
      real(r8), pointer :: decomp_hg_rest_col          (:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool  
      
@@ -50,7 +47,6 @@ module SoilBiogeochemHgStateType
 
      real(r8), pointer :: soil_hg2_dry_vr_col              (:,:)  ! col (gHg/m3)vertically-resolved soil hg2_dry
      real(r8), pointer :: soil_hg2_dry_col                 (:)    ! col (gHg/m3)soil hg2_dry pool
-
 
      real(r8), pointer :: soil_hg_vr_col              (:,:)   ! col (gHg/m3)vertically-resolved soil hg
      real(r8), pointer :: soil_hg_col                 (:)     ! col (gHg/m3)soil hg pool
@@ -505,48 +501,21 @@ contains
     class(soilbiogeochem_Hgstate_type)            :: this
     type(bounds_type) , intent(in)                :: bounds  
     type(soilbiogeochem_hgstate_type), intent(in) :: soilbiogeochem_hgstate_inst
-    !real(r8)          , intent(in) :: decomp_hgpools_vr_col(bounds%begc:,:,:)
-    !real(r8)          , intent(in) :: decomp_hgpools_col(bounds%begc:,:)
-    !real(r8)          , intent(in) :: decomp_cpools_vr_col(bounds%begc:,:,:)
-    !real(r8)          , intent(in) :: ratio
-
-    !real(r8)          , intent(in) :: decomp_cpools_1m_col(bounds%begc:,:)
-     !real(r8)          , intent(in) :: soilHg(bounds%begg)
+ 
     !
     ! !LOCAL VARIABLES:
     integer :: fc,g,l,c,j,k,n                              ! indices
     integer :: num_special_col                           ! number of good values in special_col filter
     integer :: special_col   (bounds%endc-bounds%begc+1) ! special landunit filter - columns
     !------------------------------------------------------------------------
-     !SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    !SHR_ASSERT_ALL((ubound(decomp_hgpools_col)    == (/bounds%endc,ndecomp_pools/)),                 errMsg(sourcefile, __LINE__))
-    !SHR_ASSERT_ALL((ubound(soilHg) == (/bounds%endg/)),                 errMsg(sourcefile, __LINE__))
-    !SHR_ASSERT_ALL((ubound(decomp_hgpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    
-!      do g = bounds%begg, bounds%endg
-!            this%soilHg(g)=0._r8
-!      end do     
-     
+  
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
-       
-
-       !do j = 1, nlevdecomp
-             !do k = 1, ndecomp_pools
-                !this%decomp_hgpools_vr_col(c,j,k) = decomp_cpools_vr_col(c,j,k) / decomp_cascade_con%initial_cn_ratio(k)
-
-        !end do
-
-        !end do
-       do j = 1, nlevdecomp
+      if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+         do j = 1, nlevdecomp
                 do k = 1, ndecomp_pools
-                   !if (zsoi(j) < decomp_cascade_con%initial_stock_soildepth ) then  !! only initialize upper soil column
-                      !this%decomp_hgpools_vr_col(c,j,k) = decomp_cascade_con%initial_stock(k)
                       this%decomp_hgpools_vr_col(c,j,k) = 0._r8
                       this%m_decomp_hgpools_to_fire_vr_col(c,j,k) = 0._r8
-                  !else
-                      !this%decomp_hgpools_vr_col(c,j,k) = 0._r8
-                   !endif
                 end do
          end do      
            if ( nlevdecomp > 1 ) then
@@ -560,77 +529,31 @@ contains
 
             this%decomp_hgpools_col(c,1:ndecomp_pools)    = 0._r8
             this%decomp_hgpools_30cm_col(c,1:ndecomp_pools)    = 0._r8
-
             this%m_decomp_hgpools_to_fire_col(c,1:ndecomp_pools) = 0._r8 
-                
-
-
-             !this%decomp_hgpools_1m_col(c,1:ndecomp_pools) = decomp_cascade_con%initial_stock(1:ndecomp_pools)
-
-
-
-        ! added Hg---------column Hg state variables----------------------------
-
-        
-          !do j = 1, nlevdecomp
-             !do k = 1, ndecomp_pools
-                !this%decomp_hgpools_vr_col(c,j,k) = decomp_cpools_vr_col(c,j,k) / decomp_cascade_con%initial_cn_ratio(k)
-             !end do
-             
-
-          !end do
-          !if ( nlevdecomp > 1 ) then
-             !do j = nlevdecomp+1, nlevdecomp_full
-               ! do k = 1, ndecomp_pools
-                   !this%decomp_hgpools_vr_col(c,j,k) = 0._r8
-                !end do
-                
-             !end do
-          !end if
-          
-        ! added Hg---------end----------------------------
-
+      end if 
 
           if (use_nitrif_denitrif) then
              do j = 1, nlevdecomp_full
-                
-             !--------------added Hg-----------------------
                this%soil_hg_vr_col(c,j) = 0._r8
                 this%soil_hg2_vr_col(c,j) = 0._r8
                 this%soil_hg2_dry_vr_col(c,j) = 0._r8
                 this%soilhg_surf_vr_col(c,j) = 0._r8
                 this%decomp_hg_rest_vr_col= 0._r8
                 this%initial_soilHg_col(c,j) = 0._r8
-                
-             !---------------added Hg end------------------
-
-                
-
              end do
-            
-
-             !--------------added Hg-----------------------
                this%soil_hg_col(c) = 0._r8
                 this%soil_hg2_col(c) = 0._r8
                 this%soil_hg2_dry_col(c) = 0._r8
-             !---------------added Hg end------------------
           end if
-          
-          !--------------added Hg-----------------------
                this%totlithg_col(c)    = 0._r8
                this%totsomhg_col(c)    = 0._r8
                this%totsomhg_30cm_col(c)    = 0._r8
                this%hg_leafout_pools_col(c) = 0._r8
                this%tot_lithg_fire(c) = 0._r8
-          !---------------added Hg end------------------
+     end do
 
-
-          
-      
-    end do
 
     ! initialize fields for special filters
-
     num_special_col = 0
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)

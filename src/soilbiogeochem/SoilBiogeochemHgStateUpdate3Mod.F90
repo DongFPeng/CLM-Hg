@@ -38,6 +38,7 @@ module SoilBiogeochemHgStateUpdate3Mod
   use CNFireBaseMod                      , only : cnfire_const
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   !use CNCStateUpdate1Mod, only : soilbiogeochem_carbonflux_inst
+  use clm_varctl                      , only : use_erosion, ero_ccycle
 
   !
   implicit none
@@ -162,6 +163,20 @@ module SoilBiogeochemHgStateUpdate3Mod
            end do
         end do 
       end do   
+
+      !erosion
+      if ( ero_ccycle ) then
+         do l = 1, ndecomp_pools
+            if ( decomp_cascade_con%is_soil(l) ) then
+               do j = 1, nlevdecomp
+                  do fc = 1, num_soilc
+                     c = filter_soilc(fc)
+                     decomp_hgpools_vr(c,j,l) = decomp_hgpools_vr(c,j,l) - Hgf%decomp_hgpools_yield_vr(c,j,l) * dt
+                  end do
+               end do
+            end if
+         end do
+      end if
 
 !-----------------------------------汇总----------------------------------------------
 
