@@ -40,6 +40,8 @@ module SoilBiogeochemHgStateUpdate1Mod
   use SoilBiogeochemHgStateType, only : soilbiogeochem_Hgstate_type
   use WaterStateType           , only : waterstate_type
   use WaterFluxType            , only : waterflux_type
+  use SoilStateType            , only : soilstate_type
+
   use PatchType     , only : patch
   use CanopyStateType     , only : canopystate_type
   use CNDVType                , only : dgvs_type
@@ -123,7 +125,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemHgStateUpdate1(bounds,num_soilc, filter_soilc,&
-       soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst, atm2lnd_inst, soilbiogeochem_nitrogenflux_inst,&
+        soilstate_inst, soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst, atm2lnd_inst, soilbiogeochem_nitrogenflux_inst,&
         soilbiogeochem_nitrogenstate_inst,soilbiogeochem_carbonstate_inst,soilbiogeochem_carbonflux_inst,cnveg_carbonflux_inst,photosyns_inst,&
         waterstate_inst, waterflux_inst,canopystate_inst,dgvs_inst,num_soilp,filter_soilp)
     !
@@ -146,6 +148,7 @@ contains
      type(photosyns_type), intent(in):: photosyns_inst
      type(waterstate_type)                   , intent(in)    :: waterstate_inst
      type(waterflux_type)                    , intent(in)    :: waterflux_inst
+     type(soilstate_type)                    , intent(in)    :: soilstate_inst
 
     !---------------------------added Hg end ----------------
 
@@ -237,7 +240,8 @@ contains
          h2osoi_liq          => waterstate_inst%h2osoi_liq_col                 , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
 
          qflx_drain          => waterflux_inst%qflx_drain_col                  , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)                    
-         qflx_surf           => waterflux_inst%qflx_surf_col                   , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
+         qflx_surf           => waterflux_inst%qflx_surf_col                   , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)   
+         bd                  =>    soilstate_inst%bd_col         , & ! Input: [real(r8) (:,:) ] soil bulk density (kg/m3)                     
          
          !sminn_vr            => soilbiogeochem_nitrogenstate_inst%sminn_vr_col           , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N                          
          !soil_hg2_vr         => soilbiogeochem_Hgstate_inst%soil_hg2_vr_col  ,       & ! Input:  [real(r8) (:,:) ]                                                  
@@ -506,6 +510,18 @@ contains
          !hg2_dry_dep_to_sminn(c) = forc_hg2_dry_dep(g)
       end do
     
+      !unit transfer from ng/g to gHg/m2
+   !do c = bounds%begc, bounds%endc
+     ! Hgs%soilHg_to_col(c)=Hgs%soilHg_to_col(c)*bd(c,1)*dzsoi_decomp(1)*1E-9_r8 !assume the first thinckness of first layer for erosion
+      !Hgs%soilHg_to_col(c)=Hgs%soilHg_to_col(c)*1.3_r8*0.15_r8*1E-9_r8 !Selin(2008,BGC, pre_industiral), where assume bd=1.3g/cm3, soil depth=15 cm
+   !end do
+
+   ! open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/log/variables.log')
+    !              write(10,*) '####'
+    !              write(10,*)  'dzsoi_decomp(1)', dzsoi_decomp(1)
+    !              write(10,*)  'Hgs%soilHg_to_col(c)', Hgs%soilHg_to_col(c)
+    !              write(10,*)  'bd(c,1)', bd(c,1)
+    !              write(10,*) '####'
 
     !------------------------added Hg---------------------------------------
     dt = real( get_step_size(), r8 )

@@ -27,6 +27,7 @@ module clm_cpl_indices
   integer, public ::index_l2x_Flrl_rofgwl     ! lnd->rtm input liquid gwl fluxes
   integer, public ::index_l2x_Flrl_rofsub     ! lnd->rtm input liquid subsurface fluxes
   integer, public ::index_l2x_Flrl_rofmud     ! lnd->rtm input sediment yield fluxes
+  integer, public ::index_l2x_Flrl_rofhg      ! lnd->rtm input sediment-hg fluxes
   integer, public ::index_l2x_Flrl_rofi       ! lnd->rtm input frozen fluxes
   integer, public ::index_l2x_Flrl_irrig      ! irrigation withdrawal
 
@@ -177,6 +178,7 @@ contains
     index_l2x_Flrl_rofsub   = mct_avect_indexra(l2x,'Flrl_rofsub')
     index_l2x_Flrl_rofi     = mct_avect_indexra(l2x,'Flrl_rofi')
     index_l2x_Flrl_rofmud   = mct_avect_indexra(l2x,'Flrl_rofmud')
+    index_l2x_Flrl_rofhg    = mct_avect_indexra(l2x,'Flrl_rofhg')
     index_l2x_Flrl_irrig    = mct_avect_indexra(l2x,'Flrl_irrig')
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')

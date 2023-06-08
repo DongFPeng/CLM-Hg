@@ -80,25 +80,7 @@ contains
          end do ! end of column loop
       end do
 
-      if ( ero_ccycle ) then
-        do l = 1, ndecomp_pools
-           if ( decomp_cascade_con%is_soil(l) ) then
-              do j = 1, nlevdecomp
-                 do fc = 1, num_soilc
-                    c = filter_soilc(fc)
-                    hg_s%decomp_hgpools_vr_col(c,j,l) = hg_s%decomp_hgpools_vr_col(c,j,l) - hg_f%decomp_hgpools_yield_vr(c,j,l) * dt
-                    
-                  if (hg_s%decomp_hgpools_vr_col(c,j,l) <= 0._r8) then
-                     hg_s%decomp_hgpools_vr_col(c,j,l) = 0._r8
-                  end if
-                 end do
-              end do
-           end if
-        end do
-     end if
-
      
-
      
 
     end associate 

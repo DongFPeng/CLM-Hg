@@ -626,7 +626,7 @@ contains
 
     call t_startf('SoilBiogeochem_Hg_StateUpdate1')
     call SoilBiogeochemHgStateUpdate1(bounds,num_soilc, filter_soilc,  &
-       soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,atm2lnd_inst , soilbiogeochem_nitrogenflux_inst, &
+       soilstate_inst, soilbiogeochem_state_inst, soilbiogeochem_Hgflux_inst, soilbiogeochem_Hgstate_inst,atm2lnd_inst , soilbiogeochem_nitrogenflux_inst, &
        soilbiogeochem_nitrogenstate_inst,soilbiogeochem_carbonstate_inst,soilbiogeochem_carbonflux_inst,&
        cnveg_carbonflux_inst,photosyns_inst, waterstate_inst, waterflux_inst,canopystate_inst,dgvs_inst,num_soilp,filter_soilp)
     call t_stopf('SoilBiogeochem_Hg_StateUpdate1')

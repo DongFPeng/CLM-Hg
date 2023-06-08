@@ -3,7 +3,7 @@ module SoilBiogeochemHgStateType
 #include "shr_assert.h"
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
+  use shr_infnan_mod                     , only : nan => shr_infnan_nan, assigHgment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -29,14 +29,14 @@ module SoilBiogeochemHgStateType
 
      real(r8), pointer :: hg_leafout_pools_col        (:)   ! col (gHg/m2)  leaf out Hg pools
      
-     real(r8), pointer :: decomp_hg_rest_vr_col         (:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
-     real(r8), pointer :: decomp_hg_rest_col          (:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool  
+     real(r8), pointer :: decomp_hg_rest_vr_col         (:,:) ! col (gHg/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
+     real(r8), pointer :: decomp_hg_rest_col          (:)   ! col (gHg/m3) vertically-resolved decomposing total soil N pool  
      
-     real(r8), pointer :: decomp_hgpools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) Hg pools
-     real(r8), pointer :: decomp_soilHg_vr_col           (:,:)   ! col (gN/m3) vertically-resolved decomposing total soil Hg pool
+     real(r8), pointer :: decomp_hgpools_vr_col         (:,:,:) ! col (gHg/m3) vertically-resolved decomposing (litter, cwd, soil) Hg pools
+     real(r8), pointer :: decomp_soilHg_vr_col           (:,:)   ! col (gHg/m3) vertically-resolved decomposing total soil Hg pool
 
      !wild fire
-     real(r8), pointer :: m_decomp_hgpools_to_fire_col               (:,:)   ! vertically-integrated (diagnostic) decomposing hg fire loss (gC/m2/s)
+     real(r8), pointer :: m_decomp_hgpools_to_fire_col               (:,:)   ! vertically-integrated (diagHgostic) decomposing hg fire loss (gC/m2/s)
      real(r8), pointer :: m_decomp_hgpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing hg fire loss (ghg/m3/s)
      real(r8), pointer :: tot_lithg_fire                               (:)     ! total litter Hg fire emissions
 
@@ -50,16 +50,16 @@ module SoilBiogeochemHgStateType
 
      real(r8), pointer :: soil_hg_vr_col              (:,:)   ! col (gHg/m3)vertically-resolved soil hg
      real(r8), pointer :: soil_hg_col                 (:)     ! col (gHg/m3)soil hg pool
-     real(r8), pointer :: soilHg_to_col                 (:)   !  soil Hg0
-     real(r8), pointer :: soilHg_grc                       (:)     
+     real(r8), pointer :: soilHg_to_col                 (:)   !  soil Hg0 (gHg/m2)
+     real(r8), pointer :: soilHg_grc                       (:)     ! soil Hg grid (ng/g)
      real(r8), pointer :: initial_soilHg_col            (:,:)   ! col (gHg/m3)vertically-resolved soil hg
-     ! summary (diagnostic) state variables, not   involved in mass balance
-     !real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
-    !real(r8), pointer :: decomp_npools_1m_col         (:,:)   ! col (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
+     ! summary (diagHgostic) state variables, not   involved in mass balance
+     !real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gHg/m2)  decomposing (litter, cwd, soil) N pools
+    !real(r8), pointer :: decomp_npools_1m_col         (:,:)   ! col (gHg/m2)  diagHgostic: decomposing (litter, cwd, soil) N pools to 1 meter
      !--------------added Hg--------------------------
      
      real(r8), pointer :: decomp_hgpools_col            (:,:)   ! col (gHg/m2)  decomposing (litter, cwd, soil) Hg pools
-     real(r8), pointer :: decomp_hgpools_30cm_col            (:,:)
+     real(r8), pointer :: decomp_hgpools_30cm_col       (:,:)
      !---------------added Hg end----------------------  
 
     
@@ -68,8 +68,8 @@ module SoilBiogeochemHgStateType
      real(r8), pointer :: totsomhg_col                  (:)     ! col (gHg/m2) total soil organic matter Hg
      real(r8), pointer :: totsomhg_30cm_col             (:)
      !----------------------------added Hg end------------------------------
-     real(r8), pointer :: totlitn_1m_col               (:)     ! col (gN/m2) total litter nitrogen to 1 meter
-     real(r8), pointer :: totsomn_1m_col               (:)     ! col (gN/m2) total soil organic matter nitrogen to 1 meter
+     real(r8), pointer :: totlithg_1m_col               (:)     ! col (gHg/m2) total litter nitrogen to 1 meter
+     real(r8), pointer :: totsomhg_1m_col               (:)     ! col (gHg/m2) total soil organic matter nitrogen to 1 meter
      
      ! Track adjustments to no3 and nh4 pools separately, since those aren't included in
      ! the N balance check
@@ -205,7 +205,7 @@ contains
 
     allocate(this%hg2dry_leafwash_col (begc:endc))                      ;this%hg2dry_leafwash_col(:)= nan
     
-    allocate(this%soilHg_to_col                 (begc:endc))                   ; this%soilHg_to_col  (:)   = nan
+    allocate(this%soilHg_to_col        (begc:endc))                     ;this%soilHg_to_col  (:)   = nan
     allocate(this%hg2dry_leaf__patch  (begp:endp))                      ;this%hg2dry_leaf__patch(:) = nan
     allocate(this%hg2dry_photored_col (begc:endc))                      ;this%hg2dry_photored_col(:)= nan
     allocate(this%tot_hg2photored_col (begc:endc))                      ;this%tot_hg2photored_col(:)= nan
@@ -243,7 +243,7 @@ contains
     character(8)      :: vr_suffix
     integer           :: begc,endc,begg,endg,begp,endp
     character(24)     :: fieldname
-    character(100)    :: longname
+    character(100)    :: longHgame
     real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
     real(r8), pointer :: data2dptr(:,:) ! temp. pointer for slicing larger arrays
     !---------------------------------------------------------------------
@@ -252,7 +252,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
     !if ( nlevdecomp_full > 1 ) then
        !this%decomp_soiln_vr_col(begc:endc,:) = spval
-       !call hist_addfld2d (fname='SOILN_vr', units='gN/m^3',  type2d='levdcmp', &
+       !call hist_addfld2d (fname='SOILN_vr', units='gHg/m^3',  type2d='levdcmp', &
             !avgflag='A', long_name='SOIL N (vertically resolved)', &
             !ptr_col=this%decomp_soiln_vr_col)
         !---------------added Hg------------------------
@@ -272,9 +272,9 @@ contains
        if ( nlevdecomp_full > 1 ) then
           data2dptr => this%decomp_hgpools_vr_col(:,1:nlevsoi,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'hg_vr'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' hg (vertically resolved)'
+          longHgame =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' hg (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='ghg/m^3',  type2d='levsoi', &
-               avgflag='A', long_name=longname, &
+               avgflag='A', long_name=longHgame, &
                ptr_col=data2dptr)
        endif
      
@@ -283,9 +283,9 @@ contains
     this%decomp_hgpools_col(begc:endc,:) = spval
     data1dptr => this%decomp_hgpools_col(:,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'hg'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' hg'
+          longHgame =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' hg'
           call hist_addfld1d (fname=fieldname, units='ghg/m^2', &
-               avgflag='A', long_name=longname, &
+               avgflag='A', long_name=longHgame, &
                ptr_col=data1dptr)
     !---------------added Hg end------------------
 
@@ -326,17 +326,17 @@ contains
           if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
              data1dptr => this%m_decomp_hgpools_to_fire_col(:,k)
              fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'hg_TO_FIRE'
-             longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' hg fire loss'
+             longHgame =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' hg fire loss'
              call hist_addfld1d (fname=fieldname, units='ghg/m^2/s',  &
-                  avgflag='A', long_name=longname, &
+                  avgflag='A', long_name=longHgame, &
                   ptr_col=data1dptr, default='inactive')
 
              if ( nlevdecomp_full > 1 ) then
                 data2dptr => this%m_decomp_hgpools_to_fire_vr_col(:,:,k)
                 fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'hg_TO_FIRE'//trim(vr_suffix)
-                longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' hg fire loss'
+                longHgame =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' hg fire loss'
                 call hist_addfld_decomp (fname=fieldname, units='ghg/m^3/s', type2d='levdcmp', &
-                     avgflag='A', long_name=longname, &
+                     avgflag='A', long_name=longHgame, &
                      ptr_col=data2dptr, default='inactive')
              endif
           endif
@@ -574,7 +574,7 @@ contains
     ! Read/write CN restart data for nitrogen state
     !
     ! !USES:
-    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assigHgment(=)
     use clm_time_manager     , only : is_restart, get_nstep
     use restUtilMod
     use ncdio_pio
@@ -995,7 +995,7 @@ do l = 1, ndecomp_pools
    !---------------added Hg end------------------
 
 
-   ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
+   ! for vertically-resolved soil biogeochemistry, calculate some diagHgostics of carbon pools to a given depth
   
   !----------------------summary the total decompsed remian soil hg----------------------
 
