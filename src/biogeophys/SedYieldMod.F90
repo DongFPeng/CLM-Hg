@@ -309,7 +309,7 @@ contains
                end do
 
 
-            fsr = 0._r8
+             fsr = 0._r8
                ftillage_tc = 0._r8 
                do p = col%patchi(c), col%patchf(c)
                   if (patch%active(p) .and. patch%wtcol(p)>0._r8) then

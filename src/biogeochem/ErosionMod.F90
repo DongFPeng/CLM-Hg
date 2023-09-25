@@ -151,7 +151,7 @@ contains
                   !do j = 1, nlevdecomp
                      do l = 1, ndecomp_pools
                         if ( decomp_cascade_con%is_soil(l)) then
-                           cpools_yield_vr(c,1,l) = cpools_yield_vr(c,1,l) + max(0._r8, decomp_cpools_vr(c,1,l)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
+                           cpools_yield_vr(c,1,l) = cpools_yield_vr(c,1,l) + max(0._r8, decomp_cpools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
                            !cpools_erode(c,l) = cpools_erode(c,l) + max(0._r8, cpools_yield_vr(c,j,l)* &
                               !dzsoi_decomp(j)*dm_ero/dm_yld)
                            cpools_erode(c,l) = cpools_erode(c,l) + cpools_yield_vr(c,1,l)* &
@@ -171,7 +171,7 @@ contains
                   !do j = 1, nlevdecomp
                      do l = 1, ndecomp_pools
                         if ( decomp_cascade_con%is_soil(l)) then
-                           npools_yield_vr(c,1,l) = npools_yield_vr(c,1,l) + max(0._r8, decomp_npools_vr(c,1,l)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
+                           npools_yield_vr(c,1,l) = npools_yield_vr(c,1,l) + max(0._r8, decomp_npools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
                            !npools_erode(c,l) = npools_erode(c,l) + max(0._r8, npools_yield_vr(c,j,l)* &
                               !dzsoi_decomp(j)*dm_ero/dm_yld)
                            npools_erode(c,l) = npools_erode(c,l) + npools_yield_vr(c,1,l)* &
@@ -191,7 +191,7 @@ contains
                   !do j = 1, nlevdecomp
                      do l = 1, ndecomp_pools
                         if ( decomp_cascade_con%is_soil(l)) then
-                           hgpools_yield_vr(c,1,l) = hgpools_yield_vr(c,1,l) + max(0._r8, decomp_hgpools_vr(c,1,l)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
+                           hgpools_yield_vr(c,1,l) = hgpools_yield_vr(c,1,l) + max(0._r8, decomp_hgpools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
                            !hgpools_erode(c,l) = hgpools_erode(c,l) + max(0._r8, hgpools_yield_vr(c,j,l)* &
                               !dzsoi_decomp(j)*dm_ero/dm_yld)
                            hgpools_erode(c,l) = hgpools_erode(c,l) + hgpools_yield_vr(c,1,l)* &
