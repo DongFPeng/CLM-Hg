@@ -510,18 +510,7 @@ contains
          !hg2_dry_dep_to_sminn(c) = forc_hg2_dry_dep(g)
       end do
     
-      !unit transfer from ng/g to gHg/m2
-   !do c = bounds%begc, bounds%endc
-     ! Hgs%soilHg_to_col(c)=Hgs%soilHg_to_col(c)*bd(c,1)*dzsoi_decomp(1)*1E-9_r8 !assume the first thinckness of first layer for erosion
-      !Hgs%soilHg_to_col(c)=Hgs%soilHg_to_col(c)*1.3_r8*0.15_r8*1E-9_r8 !Selin(2008,BGC, pre_industiral), where assume bd=1.3g/cm3, soil depth=15 cm
-   !end do
 
-   ! open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/log/variables.log')
-    !              write(10,*) '####'
-    !              write(10,*)  'dzsoi_decomp(1)', dzsoi_decomp(1)
-    !              write(10,*)  'Hgs%soilHg_to_col(c)', Hgs%soilHg_to_col(c)
-    !              write(10,*)  'bd(c,1)', bd(c,1)
-    !              write(10,*) '####'
 
     !------------------------added Hg---------------------------------------
     dt = real( get_step_size(), r8 )
@@ -549,9 +538,9 @@ contains
                   
                 
                   !汇集到土壤表层的所有汞
-                   hgs%soilhg_surf_col(c) = hgs%hg2dry_surf_col(c) + hgs%hg2wet_surf_col(c) + hg_p2c(c)
+                   !hgs%soilhg_surf_col(c) = hg_p2c(c) !hgs%hg2dry_surf_col(c) + hgs%hg2wet_surf_col(c) + hg_p2c(c)
                    !分配到垂直土壤层
-                   hgs%soilhg_surf_vr_col(c,j) = hgs%soilhg_surf_vr_col(c,j) + hgs%soilhg_surf_col(c)*dt*nfixation_prof(c,j)
+                   !hgs%soilhg_surf_vr_col(c,j) = hgs%soilhg_surf_vr_col(c,j) !+ hgs%soilhg_surf_col(c)*dt*nfixation_prof(c,j)
 
                    !土壤初始汞浓度
                   Hgs%initial_soilHg_col(c,j) =  Hgs%soilHg_to_col(c)*nfixation_prof(c,j)

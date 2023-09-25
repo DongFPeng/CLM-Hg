@@ -380,7 +380,7 @@ contains
 
           this%soilHg_grc(begg:endg) = spval
           call hist_addfld1d (fname='soilHg', units='gHg/m^2', &
-               avgflag='A', long_name='initial soilHg pool', &
+               avgflag='A', long_name='intial soil Hg concentration', &
                ptr_gcell=this%soilHg_grc)
           !----------------------------------added Hg end----------------------------
 
@@ -611,7 +611,7 @@ contains
 
   !-------------------------------------------added hg-----------------------------------------------
    call restartvar(ncid=ncid, flag=flag, varname='soilHg', xtype=ncd_double,  &
-         dim1name=nameg, long_name='', units='', &
+         dim1name=nameg, long_name='intial soil Hg concentration', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%soilHg_grc) 
 
 
