@@ -3,7 +3,7 @@ module SoilBiogeochemHgStateType
 #include "shr_assert.h"
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use shr_infnan_mod                     , only : nan => shr_infnan_nan, assigHgment(=)
+  use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -574,7 +574,7 @@ contains
     ! Read/write CN restart data for nitrogen state
     !
     ! !USES:
-    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assigHgment(=)
+    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_time_manager     , only : is_restart, get_nstep
     use restUtilMod
     use ncdio_pio

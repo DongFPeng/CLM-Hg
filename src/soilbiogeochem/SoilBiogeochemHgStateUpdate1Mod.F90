@@ -508,7 +508,7 @@ contains
          !Hg0dep_to_sminn(c) = forc_Hg0dep(g)
          Hgs%soilHg_to_col(c) = Hgs%soilHg_grc(g)
          !hg2_dry_dep_to_sminn(c) = forc_hg2_dry_dep(g)
-      end do
+   end do
     
 
 
@@ -538,9 +538,9 @@ contains
                   
                 
                   !汇集到土壤表层的所有汞
-                   !hgs%soilhg_surf_col(c) = hg_p2c(c) !hgs%hg2dry_surf_col(c) + hgs%hg2wet_surf_col(c) + hg_p2c(c)
+                   hgs%soilhg_surf_col(c) = hg_p2c(c) !hgs%hg2dry_surf_col(c) + hgs%hg2wet_surf_col(c) + hg_p2c(c)
                    !分配到垂直土壤层
-                   !hgs%soilhg_surf_vr_col(c,j) = hgs%soilhg_surf_vr_col(c,j) !+ hgs%soilhg_surf_col(c)*dt*nfixation_prof(c,j)
+                   hgs%soilhg_surf_vr_col(c,j) = hgs%soilhg_surf_vr_col(c,j) !+ hgs%soilhg_surf_col(c)*dt*nfixation_prof(c,j)
 
                    !土壤初始汞浓度
                   Hgs%initial_soilHg_col(c,j) =  Hgs%soilHg_to_col(c)*nfixation_prof(c,j)

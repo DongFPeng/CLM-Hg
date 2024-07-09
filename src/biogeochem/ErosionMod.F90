@@ -144,45 +144,45 @@ contains
             dm_ero = max(0._r8, flx_sed_ero(c)) * dt
             dm_yld = max(0._r8, flx_sed_yld(c)) * dt
 
-            ! for Carbon
-            ! assume top layer was the main source of Erosion
-                  !somc_yield(c) = somc_yield(c) + max(0._r8, decomp_soilc_vr(c,1)/bd(c,1)*flx_sed_yld(c))
+            ! ! for Carbon
+            ! ! assume top layer was the main source of Erosion
+            !       !somc_yield(c) = somc_yield(c) + max(0._r8, decomp_soilc_vr(c,1)/bd(c,1)*flx_sed_yld(c))
 
-                  !do j = 1, nlevdecomp
-                     do l = 1, ndecomp_pools
-                        if ( decomp_cascade_con%is_soil(l)) then
-                           cpools_yield_vr(c,1,l) = cpools_yield_vr(c,1,l) + max(0._r8, decomp_cpools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
-                           !cpools_erode(c,l) = cpools_erode(c,l) + max(0._r8, cpools_yield_vr(c,j,l)* &
-                              !dzsoi_decomp(j)*dm_ero/dm_yld)
-                           cpools_erode(c,l) = cpools_erode(c,l) + cpools_yield_vr(c,1,l)* &
-                              dzsoi_decomp(j)*dm_ero/dm_yld
-                           !cpools_deposit(c,l) = cpools_deposit(c,l) + max(0._r8, cpools_erode(c,l) - &
-                              !cpools_yield_vr(c,j,l)*dzsoi_decomp(j))
-                           cpools_deposit(c,l) = cpools_deposit(c,l) + cpools_erode(c,l) - &
-                              cpools_yield_vr(c,1,l)*dzsoi_decomp(1)
-                        end if
-                     end do
-                  !end do
+            !       !do j = 1, nlevdecomp
+            !          do l = 1, ndecomp_pools
+            !             if ( decomp_cascade_con%is_soil(l)) then
+            !                cpools_yield_vr(c,1,l) = cpools_yield_vr(c,1,l) + max(0._r8, decomp_cpools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
+            !                !cpools_erode(c,l) = cpools_erode(c,l) + max(0._r8, cpools_yield_vr(c,j,l)* &
+            !                   !dzsoi_decomp(j)*dm_ero/dm_yld)
+            !                cpools_erode(c,l) = cpools_erode(c,l) + cpools_yield_vr(c,1,l)* &
+            !                   dzsoi_decomp(j)*dm_ero/dm_yld
+            !                !cpools_deposit(c,l) = cpools_deposit(c,l) + max(0._r8, cpools_erode(c,l) - &
+            !                   !cpools_yield_vr(c,j,l)*dzsoi_decomp(j))
+            !                cpools_deposit(c,l) = cpools_deposit(c,l) + cpools_erode(c,l) - &
+            !                   cpools_yield_vr(c,1,l)*dzsoi_decomp(1)
+            !             end if
+            !          end do
+            !       !end do
 
-            ! for Nitrogen
-            ! assume top layer was the main source of Erosion
-                  !somn_yield(c) = somn_yield(c) + max(0._r8, decomp_soiln_vr(c,1)/bd(c,1)*flx_sed_yld(c))
+            ! ! for Nitrogen
+            ! ! assume top layer was the main source of Erosion
+            !       !somn_yield(c) = somn_yield(c) + max(0._r8, decomp_soiln_vr(c,1)/bd(c,1)*flx_sed_yld(c))
 
-                  !do j = 1, nlevdecomp
-                     do l = 1, ndecomp_pools
-                        if ( decomp_cascade_con%is_soil(l)) then
-                           npools_yield_vr(c,1,l) = npools_yield_vr(c,1,l) + max(0._r8, decomp_npools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
-                           !npools_erode(c,l) = npools_erode(c,l) + max(0._r8, npools_yield_vr(c,j,l)* &
-                              !dzsoi_decomp(j)*dm_ero/dm_yld)
-                           npools_erode(c,l) = npools_erode(c,l) + npools_yield_vr(c,1,l)* &
-                              dzsoi_decomp(j)*dm_ero/dm_yld
-                           !npools_deposit(c,l) = npools_deposit(c,l) + max(0._r8, npools_erode(c,l) - &
-                              !npools_yield_vr(c,j,l)*dzsoi_decomp(j))
-                           npools_deposit(c,l) = npools_deposit(c,l) + npools_erode(c,l) - &
-                              npools_yield_vr(c,1,l)*dzsoi_decomp(1)
-                        end if
-                     end do
-                  !end do
+            !       !do j = 1, nlevdecomp
+            !          do l = 1, ndecomp_pools
+            !             if ( decomp_cascade_con%is_soil(l)) then
+            !                npools_yield_vr(c,1,l) = npools_yield_vr(c,1,l) + max(0._r8, decomp_npools_vr(c,1,l)/dzsoi_decomp(1)/bd(c,1)*flx_sed_yld(c)) !all from to 1st layer
+            !                !npools_erode(c,l) = npools_erode(c,l) + max(0._r8, npools_yield_vr(c,j,l)* &
+            !                   !dzsoi_decomp(j)*dm_ero/dm_yld)
+            !                npools_erode(c,l) = npools_erode(c,l) + npools_yield_vr(c,1,l)* &
+            !                   dzsoi_decomp(j)*dm_ero/dm_yld
+            !                !npools_deposit(c,l) = npools_deposit(c,l) + max(0._r8, npools_erode(c,l) - &
+            !                   !npools_yield_vr(c,j,l)*dzsoi_decomp(j))
+            !                npools_deposit(c,l) = npools_deposit(c,l) + npools_erode(c,l) - &
+            !                   npools_yield_vr(c,1,l)*dzsoi_decomp(1)
+            !             end if
+            !          end do
+            !       !end do
 
             ! for Hg
             ! assume top layer was the main source of Erosion

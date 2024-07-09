@@ -49,6 +49,7 @@ module clm_instMod
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use SedFluxType                     , only : sedflux_type
+  use HgInventoryType                 , only : HgInvent_type
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
@@ -105,6 +106,7 @@ module clm_instMod
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
   type(sedflux_type)                      :: sedflux_vars
+  type(HgInvent_type)                     :: HgInvent_inst
   class(ozone_base_type), allocatable     :: ozone_inst
   type(photosyns_type)                    :: photosyns_inst
   type(soilstate_type)                    :: soilstate_inst
@@ -300,6 +302,8 @@ contains
     call waterflux_inst%Init(bounds)
 
     call sedflux_vars%Init(bounds)
+
+    call HgInvent_inst%Init(bounds)
 
     call glacier_smb_inst%Init(bounds)
 
@@ -518,6 +522,8 @@ contains
     call waterflux_inst%restart (bounds, ncid, flag=flag)
 
     call sedflux_vars%restart (bounds, ncid, flag=flag)
+
+    call HgInvent_inst%restart(bounds, ncid, flag=flag)
 
     call waterstate_inst%restart (bounds, ncid, flag=flag, &
          watsat_col=soilstate_inst%watsat_col(bounds%begc:bounds%endc,:)) 

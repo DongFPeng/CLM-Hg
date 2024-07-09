@@ -41,7 +41,6 @@ module CNDriverMod
   use EnergyFluxType                  , only : energyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
   use SedFluxType                     , only : sedflux_type
-  
   !
   ! !PUBLIC TYPES:
   implicit none

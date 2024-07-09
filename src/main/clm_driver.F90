@@ -40,6 +40,8 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   use SedFluxType            , only : sedflux_type
+  use HgInventoryType        , only : HgInvent_type
+  use HgInventoryMod         , only : HgEmissionProcesses
   use SedYieldMod            , only : SoilErosion 
   use CNProductsMod          , only : cn_products_type
   !
@@ -873,6 +875,15 @@ contains
           call t_stopf('erosion')
        end if
 
+          
+     ! ============================================================================
+     ! Update emissional Hg from land unit 
+     ! ============================================================================
+       
+          call t_startf('HgEmissionFlux')
+          call HgEmissionProcesses(bounds_clump, HgInvent_inst)
+          call t_stopf('HgEmissionFlux')
+
        ! ============================================================================
        ! Ecosystem dynamics: Uses CN, CNDV, or static parameterizations
        ! ============================================================================
@@ -1129,7 +1140,7 @@ contains
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-         sedflux_vars, soilbiogeochem_Hgflux_inst, lnd2atm_inst, &
+         sedflux_vars, soilbiogeochem_Hgflux_inst, HgInvent_inst, lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')
