@@ -6,6 +6,7 @@ module HgInventoryMod
   ! !USES:
     use shr_kind_mod      , only : r8 => shr_kind_r8
     use shr_log_mod       , only : errMsg => shr_log_errMsg
+    use shr_infnan_mod    , only : shr_infnan_isnan
     use clm_varcon        , only : spval
     use decompMod         , only : bounds_type
     use ColumnType        , only : col
@@ -61,9 +62,14 @@ contains
                 ! write(10,*) '####'
                 ! write(10,*) 'Hg_emission_rof(c)_before =', Hg_emission_rof(c)
                 ! write(10,*) '(c) =', c
-
+                
+                 if ( shr_infnan_isnan(Hg_emission_rof(c) )) then
+                    Hg_emission_rof(c) = spval
+                 end if 
+                
                 if (Hg_emission_rof(c)>1e30_r8) then
-                    Hg_emission_rof(c) = 0.0_r8
+                    !Hg_emission_rof(c) = 0.0_r8
+                    Hg_emission_rof(c) = spval
                 end if
 
                 ! !open(unit=10, file='/data4/home/dpeng/waterloo/cesm2.1.3/outputdata/log/log_1.log')
