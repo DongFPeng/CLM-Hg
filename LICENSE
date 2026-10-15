@@ -1,3 +1,5 @@
+This repository is made publicly accessible primarily for scientific review and evaluation. The underlying CESM, CLM, and MOSART source code remains subject to their respective original licenses and terms of use. For the authors' original and unpublished model developments, parameterizations, documentation, scientific implementations, and other repository-specific materials, any reuse, redistribution, adaptation, incorporation into other models or software, derivative development, or use in other scientific products requires **prior written permission** from **Dong Peng or the corresponding author(s)** of the associated work.
+
 Copyright (c) 2005-2018, University Corporation for Atmospheric Research (UCAR)
 All rights reserved.
 
@@ -32,3 +34,5 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 POSSIBILITY OF SUCH DAMAGE.
+
+
