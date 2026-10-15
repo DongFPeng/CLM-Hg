@@ -8,9 +8,7 @@ This repository is maintained as a component of the **MOSART-Hg-WM** modeling fr
 
 **This repository is provided solely for peer review and scientific evaluation.**
 
-The source code, model modifications, parameterizations, configuration information, documentation, unpublished implementation details, figures, and other materials contained in this repository are not released for unrestricted public reuse.
-
-Any reuse, redistribution, adaptation, incorporation into other models or software, derivative development, or use of unpublished materials from this repository requires **prior written permission** from **Dong Peng or the corresponding author(s)** of the associated work.
+The underlying CESM, CLM, and MOSART source code remains subject to their respective original licenses and terms of use. For the authors' original and unpublished model developments, parameterizations, documentation, scientific implementations, and other repository-specific materials, any reuse, redistribution, adaptation, incorporation into other models or software, derivative development, or use in other scientific products requires **prior written permission** from **Dong Peng or the corresponding author(s)** of the associated work.
 
 If you wish to reuse or reference repository-specific materials, model implementation details, parameterizations, or unpublished methods, please contact the authors before use.
 
