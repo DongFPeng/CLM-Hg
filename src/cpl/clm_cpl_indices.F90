@@ -26,6 +26,7 @@ module clm_cpl_indices
   integer, public ::index_l2x_Flrl_rofsur     ! lnd->rtm input liquid surface fluxes
   integer, public ::index_l2x_Flrl_rofgwl     ! lnd->rtm input liquid gwl fluxes
   integer, public ::index_l2x_Flrl_rofsub     ! lnd->rtm input liquid subsurface fluxes
+  integer, public ::index_l2x_Flrl_rofmud     ! lnd->rtm input sediment yield fluxes
   integer, public ::index_l2x_Flrl_rofi       ! lnd->rtm input frozen fluxes
   integer, public ::index_l2x_Flrl_irrig      ! irrigation withdrawal
 
@@ -175,6 +176,7 @@ contains
     index_l2x_Flrl_rofgwl   = mct_avect_indexra(l2x,'Flrl_rofgwl')
     index_l2x_Flrl_rofsub   = mct_avect_indexra(l2x,'Flrl_rofsub')
     index_l2x_Flrl_rofi     = mct_avect_indexra(l2x,'Flrl_rofi')
+    index_l2x_Flrl_rofmud   = mct_avect_indexra(l2x,'Flrl_rofmud')
     index_l2x_Flrl_irrig    = mct_avect_indexra(l2x,'Flrl_irrig')
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
@@ -207,6 +209,7 @@ contains
     index_l2x_Fall_flxdst2  = mct_avect_indexra(l2x,'Fall_flxdst2')
     index_l2x_Fall_flxdst3  = mct_avect_indexra(l2x,'Fall_flxdst3')
     index_l2x_Fall_flxdst4  = mct_avect_indexra(l2x,'Fall_flxdst4')
+    
 
     index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
 

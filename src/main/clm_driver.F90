@@ -13,7 +13,7 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_erosion
+  use clm_varctl             , only : use_erosion, ero_ccycle
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -63,6 +63,7 @@ module clm_driver
   use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
+  use CNVegCarbonStateType   , only : cnveg_carbonstate_type
   !
   use filterMod              , only : setFilters
   !
@@ -78,13 +79,14 @@ module clm_driver
   !
   use clm_initializeMod      , only : nutrient_competition_method
   use GridcellType           , only : grc                
-  use LandunitType           , only : lun                
+  use LandunitType           , only : lun               
   use ColumnType             , only : col                
   use PatchType              , only : patch                
   use clm_instMod            
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+
 
   !
   ! !PUBLIC TYPES:
@@ -144,8 +146,8 @@ contains
     integer              :: ier                     ! error code
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
     type(bounds_type)    :: bounds_clump    
-    type(bounds_type)    :: bounds_proc     
-
+    type(bounds_type)    :: bounds_proc    
+    
 
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
     ! needed to work around pgi compiler bugs, as noted below
@@ -824,11 +826,11 @@ contains
        ! Update sediment fluxes from land unit 
        ! ============================================================================
 
-       if (use_erosion) then
+       if (use_erosion .and. use_cn) then
           call t_startf('erosion')
           call SoilErosion(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                atm2lnd_inst, canopystate_inst, soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilstate_inst, waterstate_inst, &
-    waterflux_inst, sedflux_vars, irrigation_inst)
+    waterflux_inst, sedflux_vars, irrigation_inst, bgc_vegetation_inst%cnveg_carbonstate_inst )
           call t_stopf('erosion')
        end if
 
@@ -1084,7 +1086,7 @@ contains
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-         lnd2atm_inst, &
+         sedflux_vars, lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')

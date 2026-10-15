@@ -13,7 +13,7 @@ module SoilBiogeochemNitrogenFluxType
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col        
-  use clm_varctl                         , only : use_erosion        
+  use clm_varctl                         , only : ero_ccycle        
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -1323,7 +1323,7 @@ contains
     end if
 
         ! vertically integrate column-level N erosion flux
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
             do fc = 1, num_soilc
@@ -1348,7 +1348,7 @@ contains
 
 
     ! total column-level soil erosion N losses
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
       do k = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(k) ) then
             do fc = 1, num_soilc

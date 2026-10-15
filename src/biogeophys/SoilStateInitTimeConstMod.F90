@@ -308,8 +308,8 @@ contains
 
     ! Read tillage and lithology
     if (use_erosion) then
-       allocate(tillage_in(bounds%begg:bounds%endg,max_topounits))
-       allocate(litho_in(bounds%begg:bounds%endg,max_topounits))
+       allocate(tillage_in(bounds%begg:bounds%endg, nlevsoifl))
+       allocate(litho_in(bounds%begg:bounds%endg, nlevsoifl))
 
        call ncd_io(ncid=ncid, varname='Tillage', flag='read', data=tillage_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
@@ -323,11 +323,9 @@ contains
 
        do c = bounds%begc, bounds%endc
           g = col%gridcell(c)
-          t = col%topounit(c)
-          topi = grc_pp%topi(g)
-          ti = t - topi + 1
-          this%tillage_col(c) = tillage_in(g,ti)
-          this%litho_col(c) = litho_in(g,ti)
+         
+          soilstate_inst%tillage_col(c) = tillage_in(g,1)
+          soilstate_inst%litho_col(c) = litho_in(g,1)
        end do
 
        deallocate(tillage_in, litho_in)

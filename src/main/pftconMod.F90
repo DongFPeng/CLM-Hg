@@ -257,10 +257,10 @@ module pftconMod
      real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
 
      ! Soil erosion ground cover
-     real(r8), allocatable :: gcbc_p(:)           !effectiveness of surface cover in reducing rainfall-driven erosion
-     real(r8), allocatable :: gcbc_q(:)           !effectiveness of surface cover in reducing runoff-driven erosion
-     real(r8), allocatable :: gcbr_p(:)           !effectiveness of roots in reducing rainfall-driven erosion
-     real(r8), allocatable :: gcbr_q(:)           !effectiveness of roots in reducing runoff-driven erosion! Soil erosion ground cover
+     real(r8), allocatable :: gcbc_p(:)           ! effectiveness of surface cover in reducing rainfall-driven erosion
+     real(r8), allocatable :: gcbc_q(:)           ! effectiveness of surface cover in reducing runoff-driven erosion
+     real(r8), allocatable :: gcbr_p(:)           ! effectiveness of roots in reducing rainfall-driven erosion
+     real(r8), allocatable :: gcbr_q(:)           ! effectiveness of roots in reducing runoff-driven erosion! Soil erosion ground cover
 
 
 
@@ -467,10 +467,10 @@ contains
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
     ! Ground cover for soil erosion
-    allocate( gcbc_p             (0:mxpft) )
-    allocate( gcbc_q             (0:mxpft) )
-    allocate( gcbr_p             (0:mxpft) )
-    allocate( gcbr_q             (0:mxpft) )
+    allocate( this%gcbc_p        (0:mxpft) )
+    allocate( this%gcbc_q        (0:mxpft) )
+    allocate( this%gcbr_p        (0:mxpft) )
+    allocate( this%gcbr_q        (0:mxpft) )
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -974,14 +974,14 @@ contains
     call ncd_io('max_SH_planting_date', this%mxSHplantdate, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     
-    call ncd_io('gcbc_p',gcbc_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) gcbc_p(:) = 0._r8
-    call ncd_io('gcbc_q',gcbc_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) gcbc_q(:) = 0._r8
-    call ncd_io('gcbr_p',gcbr_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) gcbr_p(:) = 0._r8
-    call ncd_io('gcbr_q',gcbr_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) gcbr_q(:) = 0._r8
+    call ncd_io('gcbc_p',this%gcbc_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('gcbc_q',this%gcbc_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('gcbr_p',this%gcbr_p, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('gcbr_q',this%gcbr_q, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
    
 
@@ -1397,8 +1397,11 @@ contains
     deallocate( this%fun_cn_flex_b)
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
-    deallocate( this%gcpsi)
-    deallocate( this%pftcc)
+    deallocate( this%gcbc_p)
+    deallocate( this%gcbc_q)
+    deallocate( this%gcbr_p)
+    deallocate( this%gcbc_q)
+
     
   end subroutine Clean
 

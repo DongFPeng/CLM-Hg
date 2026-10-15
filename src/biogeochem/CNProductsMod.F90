@@ -25,8 +25,6 @@ module CNProductsMod
      ! ------------------------------------------------------------------------
 
      real(r8), pointer, public :: product_loss_grc(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
-     real(r8), pointer, public :: tep_tot_woodprod_grc(:) ! tep parameter for (g[C or N]/m2) total wood product pool
-
      ! ------------------------------------------------------------------------
      ! Private instance variables
      ! ------------------------------------------------------------------------
@@ -60,6 +58,7 @@ module CNProductsMod
 
      ! erosion module
      real(r8), pointer :: dwt_crop_productc_gain       (:)        ! (gC/m2/s) addition to crop product pool
+     real(r8), pointer :: dyn_cbal_adjustments_col     (:)        ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
 
    contains
 
@@ -75,6 +74,7 @@ module CNProductsMod
      procedure, public :: PartitionWoodFluxes
      procedure, public :: PartitionGrainFluxes
      procedure, public :: ComputeSummaryVars
+     procedure, public :: DynamicColumnAdjustments  ! adjust state variables when column areas change
 
 
   end type cn_products_type
@@ -119,7 +119,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp,endp
     integer :: begg,endg
-
+    integer           :: begc,endc
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
 
@@ -127,12 +127,12 @@ contains
     endp = bounds%endp
     begg = bounds%begg
     endg = bounds%endg
+    begc = bounds%begc; endc = bounds%endc
 
     allocate(this%cropprod1_grc(begg:endg)) ; this%cropprod1_grc(:) = nan
     allocate(this%prod10_grc(begg:endg)) ; this%prod10_grc(:) = nan
     allocate(this%prod100_grc(begg:endg)) ; this%prod100_grc(:) = nan
     allocate(this%tot_woodprod_grc(begg:endg)) ; this%tot_woodprod_grc(:) = nan
-    allocate(this%tep_tot_woodprod_grc(begg:endg)) ; this%tep_tot_woodprod_grc(:) = nan
 
     allocate(this%dwt_prod10_gain_grc(begg:endg)) ; this%dwt_prod10_gain_grc(:) = nan
     allocate(this%dwt_prod100_gain_grc(begg:endg)) ; this%dwt_prod100_gain_grc(:) = nan
@@ -154,6 +154,7 @@ contains
     allocate(this%prod100_loss_grc(begg:endg)) ; this%prod100_loss_grc(:) = nan
     allocate(this%tot_woodprod_loss_grc(begg:endg)) ; this%tot_woodprod_loss_grc(:) = nan
     allocate(this%product_loss_grc(begg:endg)) ; this%product_loss_grc(:) = nan
+    allocate(this%dyn_cbal_adjustments_col(begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
 
   end subroutine InitAllocate
 
@@ -298,7 +299,6 @@ contains
        this%prod10_grc(g) = 0._r8
        this%prod100_grc(g) = 0._r8
        this%tot_woodprod_grc(g) = 0._r8
-       this%tep_tot_woodprod_grc(g) = 0._r8
     end do
 
     ! Need to set these patch-level fluxes to 0 everywhere for the sake of special
@@ -441,7 +441,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine UpdateProducts(this, bounds, &
-       num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
+       num_soilp, filter_soilp,  &
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
@@ -472,8 +472,7 @@ contains
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
 
     !update from CNCStateUpdate1Mod
-    integer, intent(in) :: num_soilc_with_inactive       ! number of columns in soil filter
-    integer, intent(in) :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
+ 
     !
     ! !LOCAL VARIABLES:
     integer  :: g, c, fc        ! indices
@@ -519,9 +518,9 @@ contains
     do g = bounds%begg, bounds%endg
 
        ! fluxes into wood & grain product pools, from landcover change
-       !this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
-       !this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
-       !this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
        ! fluxes into wood & grain product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
@@ -533,13 +532,6 @@ contains
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
 
-       do fc = 1, num_soilc_with_inactive
-             c = filter_soilc_with_inactive(fc)
-            
-             this%prod10_grc(c) = this%prod10_grc(c) + this%dwt_prod10_gain_grc(c)*dt
-             this%prod100_grc(c) = this%prod100_grc(c) + this%dwt_prod100_gain_grc(c)*dt
-             this%cropprod1_grc(c) = this%cropprod1_grc(c) + this%dwt_cropprod1_gain_grc(c)*dt
-       end do
 
     end do
 
@@ -692,7 +684,8 @@ contains
        p = filter_soilp(fp)
 
        ! For now all crop product is put in the 1-year crop product pool
-       this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p) - this%cropprod1_loss_grc(p)
+         this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
+        !this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p) - this%cropprod1_loss_grc(p)
     end do
 
     call p2g(bounds, &
@@ -747,10 +740,7 @@ contains
             this%prod100_grc(g) + &
             this%cropprod1_grc(g)
 
-       ! tep for total wood products
-       this%tep_tot_woodprod_grc(g)= &
-               this%tot_woodprod_grc(g)
-
+ 
        ! total loss from wood products
        this%tot_woodprod_loss_grc(g) = &
             this%prod10_loss_grc(g) + &
@@ -771,6 +761,68 @@ contains
 
   !--------------------------------------------------
   
+ !-----------------------------------------------------------------------
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables when column areas change due to dynamic landuse
+    !
+    ! !USES:
+    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    !
+    ! !ARGUMENTS:
+    class(cn_products_type) , intent(inout) :: this
+    type(bounds_type)                      , intent(in)    :: bounds
 
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                                , intent(in)    :: clump_index
+
+    type(column_state_updater_type)        , intent(in)    :: column_state_updater
+    !
+    ! !LOCAL VARIABLES:
+    integer :: j  ! level
+    integer :: l  ! decomp pool
+    real(r8) :: adjustment_one_level(bounds%begc:bounds%endc)
+    integer :: begc, endc
+
+    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
+    !-----------------------------------------------------------------------
+
+    begc = bounds%begc
+    endc = bounds%endc
+
+     call column_state_updater%update_column_state_no_special_handling( &
+               bounds = bounds, &
+               clump_index = clump_index, &
+               var    = this%cropprod1_grc(begc:endc), &
+               adjustment = adjustment_one_level(begc:endc))
+
+     this%dyn_cbal_adjustments_col(begc:endc) = &
+               this%dyn_cbal_adjustments_col(begc:endc) + &
+               adjustment_one_level(begc:endc)
+     
+     call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            clump_index = clump_index, &
+            var    = this%prod10_grc(begc:endc), &
+            adjustment = adjustment_one_level(begc:endc))
+
+     this%dyn_cbal_adjustments_col(begc:endc) = &
+            this%dyn_cbal_adjustments_col(begc:endc) + &
+            adjustment_one_level(begc:endc) 
+
+     call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            clump_index = clump_index, &
+            var    = this%prod100_grc(begc:endc), &
+            adjustment = adjustment_one_level(begc:endc))
+
+     this%dyn_cbal_adjustments_col(begc:endc) = &
+            this%dyn_cbal_adjustments_col(begc:endc) + &
+            adjustment_one_level(begc:endc) 
+    
+
+  end subroutine DynamicColumnAdjustments
 
 end module CNProductsMod

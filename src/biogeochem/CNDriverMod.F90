@@ -12,7 +12,7 @@ module CNDriverMod
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
-  use clm_varctl                      , only : use_erosion
+  use clm_varctl                      , only : ero_ccycle
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -39,6 +39,7 @@ module CNDriverMod
   use EnergyFluxType                  , only : energyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
   use SedFluxType                     , only : sedflux_type
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -79,7 +80,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, num_soilc_with_inactive, filter_soilc_with_inactive, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                              &
@@ -144,9 +145,6 @@ contains
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
-
-    integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
-    integer                                 , intent(in)    :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
 
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
@@ -715,7 +713,7 @@ contains
 
     call t_startf('CNWoodProducts')
     call c_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
+         num_soilp, filter_soilp,  &
          dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -724,7 +722,7 @@ contains
 
     if (use_c13) then
        call c13_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
+            num_soilp, filter_soilp,  &
             dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -733,7 +731,7 @@ contains
 
     if (use_c14) then
        call c14_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
+            num_soilp, filter_soilp,  &
             dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
@@ -741,7 +739,7 @@ contains
     end if
 
     call n_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, num_soilc_with_inactive, filter_soilc_with_inactive, &
+         num_soilp, filter_soilp,  &
          dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
@@ -773,7 +771,7 @@ contains
     call t_stopf('CNFire')
 
 
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
      call ErosionFluxes(bounds, num_soilc, filter_soilc, &
           soilstate_inst, sedflux_vars, cnveg_carbonstate_inst, cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,   &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                                        &              
@@ -890,7 +888,8 @@ contains
        soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenstate_inst, &
+       c_products_inst, c13_products_inst, c14_products_inst)
     !
     ! !DESCRIPTION:
     ! Call to all CN and SoilBiogeochem summary routines, for state variables
@@ -913,6 +912,9 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(cn_products_type)                  , intent(in)    :: c_products_inst
+    type(cn_products_type)                  , intent(in)    :: c13_products_inst
+    type(cn_products_type)                  , intent(in)    :: c14_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
@@ -946,7 +948,7 @@ contains
          soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c_products_inst)
 
     if ( use_c13 ) then
        call c13_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
@@ -954,7 +956,7 @@ contains
             soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c13_products_inst)
     end if
 
     if ( use_c14 ) then
@@ -963,7 +965,7 @@ contains
             soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), c_products_inst=c14_products_inst)
     end if
 
     call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &

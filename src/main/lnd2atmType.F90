@@ -71,6 +71,7 @@ module lnd2atmType
      real(r8), pointer :: qflx_rofice_grc    (:)   => null() ! rof ice forcing
      real(r8), pointer :: qflx_liq_from_ice_col(:) => null() ! liquid runoff from converted ice runoff
      real(r8), pointer :: qirrig_grc         (:)   => null() ! irrigation flux
+     real(r8), pointer :: qflx_rofmud_grc(:)       => null() ! grc sediment yield
 
    contains
 
@@ -177,6 +178,7 @@ contains
     allocate(this%qflx_rofice_grc    (begg:endg))            ; this%qflx_rofice_grc    (:)   =ival
     allocate(this%qflx_liq_from_ice_col(begc:endc))          ; this%qflx_liq_from_ice_col(:) = ival
     allocate(this%qirrig_grc         (begg:endg))            ; this%qirrig_grc         (:)   =ival
+    allocate(this%qflx_rofmud_grc      (begg:endg)); this%qflx_rofmud_grc      (:) =ival
 
     if (shr_megan_mechcomps_n>0) then
        allocate(this%flxvoc_grc(begg:endg,1:shr_megan_mechcomps_n));  this%flxvoc_grc(:,:)=ival

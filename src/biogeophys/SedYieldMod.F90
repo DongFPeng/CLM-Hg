@@ -11,7 +11,7 @@ module SedYieldMod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use clm_varcon        , only : grav, denh2o, rpi
-  use clm_varcon        , only ：dzsoi_decomp
+  use clm_varcon        , only : dzsoi_decomp
   use clm_varcon        , only : ispval
   use clm_varpar        , only : ndecomp_pools
   use clm_varpar        , only : mxpft, nlevsno, max_patch_per_col
@@ -19,7 +19,7 @@ module SedYieldMod
   use atm2lndType       , only : atm2lnd_type
   use SoilBiogeochemDecompCascadeConType   , only : decomp_cascade_con
   use SoilBiogeochemStateType       , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType , only : decomp_cpools_vr_col
+  use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
   use CanopyStateType   , only : CanopyState_type
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type
@@ -29,11 +29,17 @@ module SedYieldMod
   use TemperatureType   , only : temperature_type
   use ColumnType        , only : col
   use LandunitType      , only : lun
+  use GridcellType    , only : grc
   use PatchType    , only : patch
   use SedFluxType       , only : sedflux_type 
   use WaterfluxType, only : waterflux_type
   use WaterstateType  , only : waterstate_type
-  use IrrigationMod   only : irrigation_type
+  use IrrigationMod   , only : irrigation_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use IrrigationMod     , only : irrigation_type
+  use pftconMod         , only : pftcon
+
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -50,7 +56,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilErosion (bounds, num_soilc, filter_soilc, &
     atm2lnd_inst, canopystate_inst, soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilstate_inst, waterstate_inst, &
-    waterflux_inst, sedflux_vars, irrigation_inst)
+    waterflux_inst, sedflux_vars, irrigation_inst, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate rainfall and runoff driven erosion 
@@ -59,13 +65,11 @@ contains
     ! runoff.
     !
     ! !USES:
-    use clm_time_manager, only : get_step_size
-    !use clm_varctl      , only : iulog
-    use landunit_varcon , only : istcrop, istsoil, istice
-    use pftconMod       , only : gcbc_p, gcbc_q, gcbr_p, gcbr_q
-    use pftconMod       , only : nc4_grass
-    !use spmdMod         , only : masterproc
-    use ColumnType        , only : col
+    use clm_time_manager  , only : get_step_size
+    !use clm_varctl       , only : iulog
+    use landunit_varcon   , only : istcrop, istsoil, istice_mec
+    use pftconMod         , only : nc4_grass
+    !use spmdMod          , only : masterproc
 
     !
     ! !ARGUMENTS:
@@ -81,7 +85,9 @@ contains
     type(soilbiogeochem_carbonstate_type)                          , intent(in)    :: soilbiogeochem_carbonstate_inst
     type(sedflux_type)                                             , intent(inout) :: sedflux_vars
     type(irrigation_type)                                          , intent(in)    :: irrigation_inst
-    !
+    type(cnveg_carbonstate_type)                                   , intent(in)    :: cnveg_carbonstate_inst
+    
+       !
     ! !LOCAL VARIABLES:
     integer  :: c, fc, p, t, l, g, j                       ! indices
     integer  :: lg, cg, lt                                 ! indices of glaciers
@@ -144,7 +150,12 @@ contains
          flx_q_ero        =>    sedflux_vars%sed_q_ero_col                                    , & ! Output: [real(r8) (:) ] sed detached by runoff (kg/m2/s)
          flx_sed_ero      =>    sedflux_vars%sed_ero_col                                      , & ! Output: [real(r8) (:) ] total detachment (kg/m2/s)
          flx_sed_crop_ero =>    sedflux_vars%sed_crop_ero_col                                 , & ! Output: [real(r8) (:) ] cropland detachment (kg/m2/s)
-         flx_sed_yld      =>    sedflux_vars%sed_yld_col                                        & ! Output: [real(r8) (:) ] sed flux to inland waters (kg/m2/s)
+         flx_sed_yld      =>    sedflux_vars%sed_yld_col                                      , & ! Output: [real(r8) (:) ] sed flux to inland waters (kg/m2/s)
+         gcbc_p           =>    pftcon%gcbc_p                                            , & ! Input : [real(r8) (:) ] effectiveness of surface cover in reducing rainfall-driven erosion
+         gcbc_q           =>    pftcon%gcbc_q                                            , & ! Input : [real(r8) (:) ] effectiveness of surface cover in reducing rainfall-driven erosion
+         gcbr_p           =>    pftcon%gcbr_p                                            , & ! Input : [real(r8) (:) ] effectiveness of surface cover in reducing rainfall-driven erosion
+         gcbr_q           =>    pftcon%gcbr_q                                             & ! Input : [real(r8) (:) ] effectiveness of surface cover in reducing rainfall-driven erosion
+
          )
 
          ! Get time step
@@ -155,7 +166,7 @@ contains
             c = filter_soilc(fc)
             l = col%landunit(c)
             g = col%gridcell(c)
-            !t = col%topounit(c)
+            
 
             ! initialization
             flx_p_ero(c)          = 0._r8
@@ -170,7 +181,7 @@ contains
             end if
 
             ! check the glacier landunit in the topounit
-            lt = col%landunit_indices(istice, l) 
+            lt = grc%landunit_indices(istice_mec, g) 
             fglacier = 1._r8
             if (lt /= ispval) then
                found = .false.
@@ -183,7 +194,7 @@ contains
                   end if
                end do
                if (found .and. qflx_qrgwl(cg)<1.e10_r8) then
-                  fglacier = 1._r8 + 9._r8 * lun%wttopounit(lt)
+                  fglacier = 1._r8 + 9._r8 * lun%wtgcell(lt)
                end if
             end if
 
@@ -207,29 +218,57 @@ contains
             Es_P = 0._r8    ! detachment by throughfall + leap drip
             Es_Pcrp = 0._r8 ! cropland detachment by throughfall + leap drip
 
+            ! Calculate throughfall and leap drip
+            !! check temperature and rain events
             if (forc_t(c)>SHR_CONST_TKFRZ .and. forc_rain(c)>0._r8) then
                fungrvl = 1._r8 - 0.01_r8 * fgrvl(c,1)
                do p = col%patchi(c), col%patchf(c)
+
                   if (patch%active(p) .and. patch%wtcol(p)>0._r8) then
-
-                     ! throughfall power
-
-                     Ptot = (qflx_dirct_rain(p) + qflx_real_irrig(p)) * dtime    ! mm
-                     Ie = 3.6e3_r8 * (forc_rain(t) + qflx_real_irrig(p))         ! mm/hr
+                     ! throughfall power(add irrig or not)
+                     Ptot = qflx_dirct_rain(p) * dtime    ! mm
+                     Ie = 3.6e3_r8 * (forc_rain(c))         ! mm/hr
                      KE_DT = Ptot * fungrvl * max(8.95_r8+8.44_r8*log10(Ie), 0._r8)
 
                       !leaf drip power
                      Dl = max(qflx_leafdrip(p)*dtime, 0._r8)      ! mm
                      cheight = 0.5_r8*min(htop(p)+hbot(p),40._r8) ! m
                      KE_LD = max(15.8_r8*sqrt(cheight)-5.87_r8, 0._r8) * fungrvl * Dl
+
+                     ! LAI and root biomass (kgC/m3): OM/OC = 1.72
                      Clai = 1._r8 - exp(-tlai(p))
                      PCT_gnd = 100._r8 * max(Crsd,Clai) ! ground cover in percentage
-                     Broot = 1.e-3_r8 * ( veg_cs%frootc(p)*froot_prof(p,1) + &
-                        (veg_cs%livecrootc(p)+veg_cs%deadcrootc(p))*croot_prof(p,1) )
+                     Broot = 1.e-3_r8 * (cnveg_carbonstate_inst%frootc_patch(p)*froot_prof(p,1) + &
+                        (cnveg_carbonstate_inst%livecrootc_patch(p)+cnveg_carbonstate_inst%deadcrootc_patch(p))*croot_prof(p,1) )
                      fgndcov = exp( -gcbc_p(patch%itype(p))*PCT_gnd - &
                         gcbr_p(patch%itype(p))*Broot ) 
 
-                     ! For crop veg types
+                     ! write temp records for few paramerters
+                     open(unit=10, file='/data4/home/dpeng/CESM/cesm2.1.3/outputdata/test_erosion_v2_checkEQ1/run/variables.log')
+                     write(10,*)  '####'
+                     write(10,*)  'dtime=', dtime
+                     write(10,*)  'forc_rain(c)', forc_rain(c)
+                     write(10,*)  'qflx_dirct_rain(p)', qflx_dirct_rain(p)
+                     write(10,*)  'qflx_leafdrip(p)', qflx_leafdrip(p)
+                     write(10,*)  'Dl', Dl
+                     write(10,*)  'fgrvl(c,1)=', fgrvl(c,1) 
+                     write(10,*)  'Ptot=', Ptot
+                     write(10,*)  'Ie=', Ie
+                     write(10,*)  'cheight=', cheight
+                     write(10,*)  'KE_LD', KE_LD
+                     write(10,*)  'KE_DT=', KE_DT
+                     write(10,*)  'Clai=', Clai
+                     write(10,*)  'PCT_gnd=', PCT_gnd
+                     write(10,*)  'Broot=', Broot
+                     write(10,*)  'fgndcov=', fgndcov
+                     write(10,*)  'K=', K
+                     write(10,*)  'pfactor(c)=', pfactor(c)
+                     write(10,*)  'flitho=', flitho
+                     write(10,*)  'ftillage=', ftillage
+                     write(10,*)  'patch%wtcol(p)=', patch%wtcol(p)
+                     write(10,*)  '####'
+
+                     !check cropland or not
                      if( patch%itype(p) > nc4_grass )then
                         Es_Pcrp = Es_Pcrp + pfactor(c) * ftillage * flitho * &
                            fgndcov * patch%wtcol(p) * K * (KE_DT+KE_LD)
@@ -243,9 +282,12 @@ contains
                   end if
                end do
             end if
-
+            ! calculate the erosion in land without snowcover
             Es_P = 1.e-3_r8 / dtime * (1._r8 - frac_sno(c)) * Es_P        ! kg/m2/s 
             Es_Pcrp = 1.e-3_r8 / dtime * (1._r8 - frac_sno(c)) * Es_Pcrp  ! kg/m2/s
+            !Es_P = 1e-7_r8 / 8.64_r8 * Es_P
+            !Es_Pcrp = 1e-7_r8 / 8.64_r8 * Es_P
+
 
             ! snow scaling factor from T factor of BQART
             Qs = 8.64e4_r8 * qflx_surf(c)                ! mm/d
@@ -261,20 +303,21 @@ contains
                fslp_tc = 0._r8
 
                do j = 1, nlevslp-1
-                  sinslp = sin(atan(max(0.5_r8*(hslp_p10(c,j)+hslp_p10(c,j+1)),1e-4_r8)))
-                  factor_slp = factor_slp + fslp * sinslp
+                  sinslp = sin(atan(max(0.5_r8*(hslp_p10(c,j)+hslp_p10(c,j+1)),1.e-4_r8)))
+                  fslp = fslp + frac_slp * sinslp
+                  fslp_tc = fslp_tc + frac_slp * sinslp**1.25_r8
                end do
 
 
             fsr = 0._r8
                ftillage_tc = 0._r8 
-               do p = col%pfti(c), col%pftf(c)
+               do p = col%patchi(c), col%patchf(c)
                   if (patch%active(p) .and. patch%wtcol(p)>0._r8) then
                      ! LAI and root biomass (kgC/m3): OM/OC = 1.72
                      Clai = 1._r8 - exp(-tlai(p))
                      PCT_gnd = 100._r8 * max(Crsd,Clai) ! ground cover in percentage
-                     Broot = 1.e-3_r8 * ( veg_cs%frootc(p)*froot_prof(p,1) + &
-                        (veg_cs%livecrootc(p)+veg_cs%deadcrootc(p))*croot_prof(p,1) )
+                     Broot = 1.e-3_r8 * ( cnveg_carbonstate_inst%frootc_patch(p)*froot_prof(p,1) + &
+                        (cnveg_carbonstate_inst%livecrootc_patch(p)+cnveg_carbonstate_inst%deadcrootc_patch(p))*croot_prof(p,1) )
                      fgndcov = exp( -gcbc_q(patch%itype(p))*PCT_gnd - &
                         gcbr_q(patch%itype(p))*Broot )
 

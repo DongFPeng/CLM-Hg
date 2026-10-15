@@ -767,6 +767,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+   
     !
     ! !LOCAL VARIABLES:
 
@@ -784,7 +785,7 @@ contains
          soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call this%cn_balance_inst%BeginCNBalance( &
          bounds, num_soilc, filter_soilc, &
@@ -863,7 +864,7 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
-         num_pcropp, filter_pcropp, doalb, num_soilc_with_inactive, filter_soilc_with_inactive,            &
+         num_pcropp, filter_pcropp, doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -974,7 +975,7 @@ contains
          soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenstate_inst, this%c_products_inst, this%c13_products_inst, this%c14_products_inst)
 
     call  CNDriverSummarizeFluxes(bounds, &
          num_soilc, filter_soilc, &
@@ -1037,12 +1038,12 @@ contains
        call this%cn_balance_inst%CBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_carbonflux_inst, &
-            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, this%c_products_inst)
+            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst)
 
        call this%cn_balance_inst%NBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_nitrogenflux_inst, &
-            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, this%n_products_inst)
+            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst)
 
     end if
 

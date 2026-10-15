@@ -22,8 +22,7 @@ module CNBalanceCheckMod
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
   use clm_varctl                      , only : use_erosion, ero_ccycle
-  use clm_varctl                      , only : use_c13, use_c14
-  use CNProductsMod                   , only : cn_products_type
+  
   
 
   !
@@ -117,7 +116,7 @@ contains
  
   !-----------------------------------------------------------------------
   subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, c_products_inst)
+       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -130,7 +129,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
-    type(cn_products_type)               , intent(in)    :: c_products_inst
+    
     
 
     !
@@ -177,9 +176,14 @@ contains
          col_coutputs(c) = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
               col_xsmrpool_to_atm(c)
 
-         ! Wood product losses and crop export losses
-         col_coutputs(c) = col_coutputs(c) + & 
-                  c_products_inst%product_loss_grc(c)
+          ! Fluxes to product pools are included in column-level outputs: the product
+         ! pools are not included in totcolc, so are outside the system with respect to
+         ! these balance checks. (However, the dwt flux to product pools is NOT included,
+         ! since col_begcb is initialized after the dynamic area adjustments - i.e.,
+         ! after the dwt term has already been taken out.)
+         col_coutputs(c) = col_coutputs(c) + &
+              wood_harvestc(c) + &
+              grainc_to_cropprodc(c)
               
 
          ! subtract leaching flux
@@ -227,9 +231,7 @@ contains
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
 
-         if (ero_ccycle) then
-            write(iulog,*)'erosion               = ',som_c_yield(c)*dt
-         end if
+         
 
 
          call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -241,7 +243,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, n_products_inst)
+       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform nitrogen mass conservation check
@@ -257,7 +259,6 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
-    type(cn_products_type)                  , intent(in)    :: n_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,err_index,j  ! indices
@@ -322,8 +323,9 @@ contains
          ! these balance checks. (However, the dwt flux to product pools is NOT included,
          ! since col_begnb is initialized after the dynamic area adjustments - i.e.,
          ! after the dwt term has already been taken out.)
-         col_noutputs(c) = col_noutputs(c) + & 
-                  n_products_inst%product_loss_grc(c)
+         col_noutputs(c) = col_noutputs(c) + &
+              wood_harvestn(c) + &
+              grainn_to_cropprodn(c)
              
 
          if (.not. use_nitrif_denitrif) then

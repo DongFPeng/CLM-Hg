@@ -12,7 +12,7 @@ module SoilBiogeochemCarbonFluxType
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use clm_varctl                         , only : use_fates
-  use clm_varctl                         , only : use_erosion
+  use clm_varctl                         , only : ero_ccycle
   
   ! 
   ! !PUBLIC TYPES:
@@ -241,6 +241,7 @@ contains
        this%decomp_cpools_erode(begc:endc,:)   = spval
        this%decomp_cpools_deposit(begc:endc,:) = spval
        this%decomp_cpools_yield(begc:endc,:)   = spval
+       
        do k = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(k) ) then
             data1dptr => this%decomp_cpools_erode(:,k)
@@ -760,7 +761,8 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_cpools_transport_tendency_col(i,j,k) = value_column
-             this%decomp_cpools_sourcesink_col(i,j,k)         = value_column  
+             this%decomp_cpools_sourcesink_col(i,j,k)         = value_column
+             this%decomp_cpools_yield_vr(i,j,k) = value_column   
           end do
        end do
     end do
@@ -833,7 +835,7 @@ contains
     end do
 
      ! vertically integrate column-level carbon erosion flux
-    if (use_erosion) then
+    if (ero_ccycle) then
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
             do fc = 1, num_soilc
@@ -848,7 +850,7 @@ contains
 
 
      ! column-level carbon losses due to soil erosion
-    if ( use_erosion ) then
+    if ( ero_ccycle ) then
       do l = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(l) ) then
             do fc = 1, num_soilc

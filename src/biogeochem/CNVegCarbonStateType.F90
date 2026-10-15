@@ -2434,11 +2434,12 @@ contains
   subroutine Summary_carbonstate(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
        soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, soilbiogeochem_totsomc_col, &
-       soilbiogeochem_ctrunc_col)
+       soilbiogeochem_ctrunc_col, c_products_inst)
     !
     ! !USES:
     use subgridAveMod, only : p2c
     use clm_time_manager , only : get_nstep
+    use CNProductsMod,  only : cn_products_type
 
     !
     ! !DESCRIPTION:
@@ -2457,6 +2458,7 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
+    type(cn_products_type) , intent(in) :: c_products_inst
 
 
     !
@@ -2558,8 +2560,7 @@ contains
             soilbiogeochem_cwdc_col(c)    + &
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
-            this%totvegc_col(c)           + &
-            this%woodc_patch(c)
+            this%totvegc_col(c)           
    
 
 
@@ -2568,9 +2569,8 @@ contains
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
-            soilbiogeochem_ctrunc_col(c)    + &
-            this%woodc_patch(c)
-
+            soilbiogeochem_ctrunc_col(c)    
+            
     end do
 
   end subroutine Summary_carbonstate
@@ -2705,6 +2705,7 @@ contains
 
     call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         flux1_out_dest = 'flux_out_grc_area', &
          flux1_fraction_by_pft_type = pftcon%pconv, &
          var = this%deadstemc_patch(begp:endp), &
          flux1_out = conv_cflux(begp:endp), &

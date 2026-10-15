@@ -1216,14 +1216,13 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater, cn_products_inst)
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
     !
     ! !DESCRIPTION:
     ! Adjust state variables when column areas change due to dynamic landuse
     !
     ! !USES:
     use dynColumnStateUpdaterMod, only : column_state_updater_type
-    use CNProductsMod           , only : cn_products_type
     !
     ! !ARGUMENTS:
     class(ch4_type)                 , intent(inout) :: this
@@ -1234,7 +1233,6 @@ contains
     integer                         , intent(in)    :: clump_index
 
     type(column_state_updater_type) , intent(in)    :: column_state_updater
-    type(cn_products_type)          , intent(inout) :: c_products_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: finundated_new_col(bounds%begc:bounds%endc)    ! finundated after column adjustments
@@ -1337,36 +1335,7 @@ contains
             var    = this%conc_o2_unsat_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc))
-
-       call column_state_updater%update_column_state_no_special_handling(  &
-            bounds      = bounds,                                         &
-            clump_index = clump_index,                                    &
-            var         = c_products_inst%cropprod1_grc(begc:endc),     &
-            adjustment  = adjustment_one_level(begc:endc))
-
-       soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc) = &
-            soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments(begc:endc) + &
-            adjustment_one_level(begc:endc)
-
-       call update_column_state_no_special_handling( column_state_updater, &
-            bounds      = bounds,                                         &
-            clump_index = clump_index,                                    &
-            var         = c_products_inst%prod10_grc(begc:endc),     &
-            adjustment  = adjustment_one_level(begc:endc))
-
-       soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments(begc:endc) = &
-            soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments(begc:endc) + &
-            adjustment_one_level(begc:endc)
-
-       call update_column_state_no_special_handling( column_state_updater, &
-            bounds      = bounds,                                         &
-            clump_index = clump_index,                                    &
-            var         = c_products_inst%prod100_grc(begc:endc),     &
-            adjustment  = adjustment_one_level(begc:endc))
-
-       soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments(begc:endc) = &
-            soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments(begc:endc) + &
-            adjustment_one_level(begc:endc)
+    end do
 
     this%finundated_col(begc:endc) = &
          finundated_new_col(begc:endc)
