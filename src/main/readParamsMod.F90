@@ -33,6 +33,8 @@ contains
     use CNPhenologyMod                    , only : readCNPhenolParams                     => readParams
     use SoilBiogeochemCompetitionMod      , only : readSoilBiogeochemCompetitionParams    => readParams
     use SoilBiogeochemNLeachingMod        , only : readSoilBiogeochemNLeachingParams      => readParams
+    !use SoilBiogeochemHgLeachingMod       , only : readSoilBiogeochemHgLeachingParams     => readParams
+    use SoilBiogeochemHgStateUpdate1Mod   , only : readSoilBiogeochemHgStateUpdate1Params => readParams
     use SoilBiogeochemNitrifDenitrifMod   , only : readSoilBiogeochemNitrifDenitrifParams => readParams
     use SoilBiogeochemLittVertTranspMod   , only : readSoilBiogeochemLittVertTranspParams => readParams
     use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
@@ -86,6 +88,8 @@ contains
        call readSoilBiogeochemDecompParams(ncid)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
+       !call readSoilBiogeochemHgLeachingParams(ncid)
+       call readSoilBiogeochemHgStateUpdate1Params(ncid)
        call readSoilBiogeochemNLeachingParams(ncid)
        call readSoilBiogeochemPotentialParams(ncid)
        call CNParamsReadShared(ncid, NLFilename_in)  ! this is called CN params but really is for the soil biogeochem parameters

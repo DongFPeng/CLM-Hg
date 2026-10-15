@@ -28,6 +28,8 @@ module clm_initializeMod
 
   use clm_instMod
   use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
+
+  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   ! 
   implicit none
   public   ! By default everything is public 
@@ -285,6 +287,9 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
+    use hg0depStreamMod       , only : hg0dep_init, hg0dep_interp
+    use hg2depStreamMod       , only  : hg2dep_init, hg2dep_interp
+    use hg2_dry_depStreamMod  , only  : hg2_dry_dep_init, hg2_dry_dep_interp
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
@@ -573,7 +578,36 @@ contains
        end if
        call t_stopf('init_ndep')
     end if
+    ! ------------------------------------------------------------------------
+    ! Initialize hg deposition
+    ! ------------------------------------------------------------------------
 
+     if (use_cn) then
+          call t_startf('init_hg0dep')
+          !if (.not. ndep_from_cpl) then
+              call hg0dep_init(bounds_proc, NLFilename)
+              call hg0dep_interp(bounds_proc, atm2lnd_inst)
+          !end if
+              call t_stopf('init_hg0dep')
+     end if
+
+     if (use_cn) then
+          call t_startf('init_hg2dep')
+          !if (.not. ndep_from_cpl) then
+              call hg2dep_init(bounds_proc, NLFilename)
+              call hg2dep_interp(bounds_proc, atm2lnd_inst)
+          !end if
+              call t_stopf('init_hg2dep')
+     end if
+   
+     if (use_cn) then
+          call t_startf('init_hg2_dry_dep')
+          !if (.not. ndep_from_cpl) then
+              call hg2_dry_dep_init(bounds_proc, NLFilename)
+              call hg2_dry_dep_interp(bounds_proc, atm2lnd_inst)
+          !end if
+              call t_stopf('init_hg2_dry_dep')
+     end if
     ! ------------------------------------------------------------------------
     ! Initialize active history fields. 
     ! ------------------------------------------------------------------------

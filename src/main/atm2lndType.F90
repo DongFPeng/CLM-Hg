@@ -86,6 +86,10 @@ module atm2lndType
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: forc_hg0dep_grc               (:)   => null() ! hg0 deposition rate (ghg/m2/s)
+     real(r8), pointer :: forc_hg0dep_uptake_grc           (:)   => null() ! hg0 deposition rate (ghg/m2/s)
+     real(r8), pointer :: forc_hg2dep_grc               (:)   => null() ! hg2 deposition rate (ghg/m2/s)
+     real(r8), pointer :: forc_hg2_dry_dep_grc          (:)   => null() ! hg2 dry deposition rate (ghg/m2/s)
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
@@ -509,6 +513,10 @@ contains
     allocate(this%forc_solai_grc                (begg:endg,numrad)) ; this%forc_solai_grc                (:,:) = ival
     allocate(this%forc_solar_grc                (begg:endg))        ; this%forc_solar_grc                (:)   = ival
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
+    allocate(this%forc_hg0dep_grc               (begg:endg))        ; this%forc_hg0dep_grc               (:)   = ival
+    allocate(this%forc_hg0dep_uptake_grc        (begg:endg))        ; this%forc_hg0dep_uptake_grc        (:)   = ival
+    allocate(this%forc_hg2dep_grc               (begg:endg))        ; this%forc_hg2dep_grc              (:)   = ival
+    allocate(this%forc_hg2_dry_dep_grc          (begg:endg))        ; this%forc_hg2_dry_dep_grc         (:)   = ival
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
     allocate(this%forc_aer_grc                  (begg:endg,14))     ; this%forc_aer_grc                  (:,:) = ival
@@ -592,6 +600,35 @@ contains
     begg = bounds%begg; endg= bounds%endg
     begc = bounds%begc; endc= bounds%endc
     begp = bounds%begp; endp= bounds%endp
+
+    this%forc_ndep_grc(begg:endg) = spval
+    call hist_addfld1d (fname='n_dep',  units='g(N)/m2/s',  &
+         avgflag='A', long_name='N deposition from atmosphere', &
+         ptr_lnd=this%forc_ndep_grc)
+
+    
+    this%forc_hg0dep_grc(begg:endg) = spval
+    call hist_addfld1d (fname='hg0_dep',  units='g(Hg)/m2/s',  &
+         avgflag='A', long_name='hg0 deposition from atmosphere', &
+         ptr_lnd=this%forc_hg0dep_grc)
+
+
+   this%forc_hg0dep_uptake_grc(begg:endg) = spval
+    call hist_addfld1d (fname='hg0_dep_uptake',  units='g(Hg)/m2/s',  &
+         avgflag='A', long_name='hg0 deposition into plant from atmosphere', &
+         ptr_lnd=this%forc_hg0dep_uptake_grc)
+
+
+
+    this%forc_hg2dep_grc(begg:endg) = spval
+    call hist_addfld1d (fname='hg2_dep',  units='g(Hg)/m2/s',  &
+         avgflag='A', long_name='hg2 deposition from atmosphere', &
+         ptr_lnd=this%forc_hg2dep_grc)
+    
+    this%forc_hg2_dry_dep_grc(begg:endg) = spval
+    call hist_addfld1d (fname='hg2_dry__dep',  units='g(Hg)/m2/s',  &
+         avgflag='A', long_name='hg2_dry_ deposition from atmosphere', &
+         ptr_lnd=this%forc_hg2_dry_dep_grc)
 
     this%forc_flood_grc(begg:endg) = spval
     call hist_addfld1d (fname='QFLOOD',  units='mm/s',  &

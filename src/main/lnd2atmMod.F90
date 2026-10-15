@@ -39,6 +39,8 @@ module lnd2atmMod
   use GridcellType         , only : grc                
   use landunit_varcon      , only : istice_mec
   use SedFluxType          , only : sedflux_type
+  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
+  use HgInventoryType      , only : HgInvent_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -127,7 +129,7 @@ contains
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
        solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-       sedflux_vars, lnd2atm_inst, &
+       sedflux_vars, soilbiogeochem_Hgflux_inst, HgInvent_type_inst, lnd2atm_inst, &
        net_carbon_exchange_grc) 
     !
     ! !DESCRIPTION:
@@ -155,6 +157,8 @@ contains
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
     type(sedflux_type)          , intent(in)    :: sedflux_vars
+    type(soilbiogeochem_Hgflux_type) , intent(in) :: soilbiogeochem_Hgflux_inst
+    type(HgInvent_type)         , intent(in) :: HgInvent_type_inst
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
@@ -411,6 +415,16 @@ contains
     call c2g( bounds, &
          sedflux_vars%sed_yld_col(bounds%begc:bounds%endc), &
          lnd2atm_inst%qflx_rofmud_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+     call c2g( bounds, &
+         soilbiogeochem_Hgflux_inst%somhg_yield(bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofhg_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+     call c2g( bounds, &
+         HgInvent_type_inst%Hg_emission_rof(bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofhgE_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
   end subroutine lnd2atm

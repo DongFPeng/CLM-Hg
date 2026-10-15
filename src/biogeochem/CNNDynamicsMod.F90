@@ -19,12 +19,15 @@ module CNNDynamicsMod
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
   use WaterStateType                  , only : waterstate_type
   use WaterFluxType                   , only : waterflux_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
+  use spmdMod        , only : masterproc
+  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
   !
   implicit none
   private
@@ -32,6 +35,7 @@ module CNNDynamicsMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNNDynamicsReadNML          ! Read in namelist for Mineral Nitrogen Dynamics
   public :: CNNDeposition               ! Update N deposition rate from atm forcing
+  public :: HgDeposition                ! Update Hg deposition rate from atm forcing
   public :: CNNFixation                 ! Update N Fixation rate
   public :: CNNFert                     ! Update N fertilizer for crops
   public :: CNSoyfix                    ! N Fixation for soybeans
@@ -147,9 +151,55 @@ contains
 
       end do
 
+    !if (masterproc) then
+    ! write(iulog,*)' : The  Output of ndep_to_sminn = ', ndep_to_sminn
+    !end if
+
     end associate
 
   end subroutine CNNDeposition
+
+  !-----------------------------------------------------------------------
+  subroutine HgDeposition( bounds, &
+       atm2lnd_inst, soilbiogeochem_Hgflux_inst )
+    
+    ! !DESCRIPTION: added Hg
+   
+    ! !USES:
+    use CNSharedParamsMod    , only: use_fun
+    ! !ARGUMENTS:
+    type(bounds_type)        , intent(in)    :: bounds  
+    type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+    type(soilbiogeochem_Hgflux_type) , intent(inout) :: soilbiogeochem_Hgflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g,c                    ! indices
+    !-----------------------------------------------------------------------
+    
+    associate(                                                                  & 
+         forc_Hg0dep      =>  atm2lnd_inst%forc_Hg0dep_grc ,                       & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
+         forc_hg2dep      =>  atm2lnd_inst%forc_hg2dep_grc ,                       & ! Input:  [real(r8) (:)]  hg deposition rate (ghg/m2/s)
+         forc_hg2_dry_dep =>  atm2lnd_inst%forc_hg2_dry_dep_grc ,                  &
+         Hg0dep_to_sminn  =>  soilbiogeochem_Hgflux_inst%Hg0dep_to_sminn_col , &
+         hg2dep_to_sminn  =>  soilbiogeochem_Hgflux_inst%hg2dep_to_sminn_col, & ! Output: [real(r8) (:)]  atmospheric N deposition to soil mineral N (gN/m2/s)
+         hg2_dry_dep_to_sminn =>  soilbiogeochem_Hgflux_inst%hg2_dry_dep_to_sminn_col &
+         )
+      
+      ! Loop through columns
+      do c = bounds%begc, bounds%endc
+         g = col%gridcell(c)
+         !Hg0dep_to_sminn(c) = forc_Hg0dep(g)
+         hg2dep_to_sminn(c) = forc_hg2dep(g)
+         !hg2_dry_dep_to_sminn(c) = forc_hg2_dry_dep(g)
+      end do
+  
+  !if (masterproc) then
+    ! write(iulog,*)' : The  Output of Hg0dep_to_sminn = ', Hg0dep_to_sminn
+    !end if
+    end associate
+
+  end subroutine HgDeposition
+
 
   !-----------------------------------------------------------------------
   subroutine CNFreeLivingFixation(num_soilc, filter_soilc, &

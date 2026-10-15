@@ -17,6 +17,9 @@ module SoilBiogeochemPotentialMod
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use clm_varctl                         , only : use_fates, iulog
+  use SoilBiogeochemHgStateType          , only : soilbiogeochem_hgstate_type 
+  !use spmdMod        , only : masterproc
+  !use clm_varctl     , only : iulog, use_vertsoilc, use_fates
   !
   implicit none
   private
@@ -69,8 +72,9 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemPotential (bounds, num_soilc, filter_soilc, &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,  &
+       soilbiogeochem_hgstate_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
-       cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
+       cn_decomp_pools, p_decomp_cpool_loss, p_decomp_hgpool_loss, pmnf_decomp_cascade)
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
@@ -84,8 +88,10 @@ contains
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_hgstate_type)       , intent(in)    :: soilbiogeochem_hgstate_inst
     real(r8)                                , intent(out)   :: cn_decomp_pools(bounds%begc:,1:,1:)     ! c:n ratios of applicable pools
     real(r8)                                , intent(out)   :: p_decomp_cpool_loss(bounds%begc:,1:,1:) ! potential C loss from one pool to another
+    real(r8)                                , intent(out)   :: p_decomp_hgpool_loss(bounds%begc:,1:,1:) ! added hg: potential hg loss from one pool to another
     real(r8)                                , intent(out)   :: pmnf_decomp_cascade(bounds%begc:,1:,1:) ! potential mineral N flux, from one pool to another
     !
     ! !LOCAL VARIABLES:
@@ -101,6 +107,7 @@ contains
 
     SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(p_decomp_hgpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__)) !added hg
     SHR_ASSERT_ALL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
 
     associate(                                                                                                          & 
@@ -116,7 +123,7 @@ contains
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
 
          decomp_cpools_vr                 => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col                  , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
-
+         decomp_hgpools_vr_col           => soilbiogeochem_hgstate_inst%decomp_hgpools_vr_col                      , &
          decomp_cascade_ntransfer_vr      => soilbiogeochem_nitrogenflux_inst%decomp_cascade_ntransfer_vr_col      , & ! Output: [real(r8) (:,:,:) ]  vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
          decomp_cascade_sminn_flux_vr     => soilbiogeochem_nitrogenflux_inst%decomp_cascade_sminn_flux_vr_col     , & ! Output: [real(r8) (:,:,:) ]  vert-res mineral N flux for transition along decomposition cascade (gN/m3/s)
          potential_immob_vr               => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col               , & ! Output: [real(r8) (:,:)   ]                                                  
@@ -138,6 +145,7 @@ contains
       ! set initial values for potential C and N fluxes
       p_decomp_cpool_loss(begc:endc, :, :) = 0._r8
       pmnf_decomp_cascade(begc:endc, :, :) = 0._r8
+      p_decomp_hgpool_loss(begc:endc, :, :) = 0._r8
 
       ! column loop to calculate potential decomp rates and total immobilization demand
 
@@ -176,6 +184,10 @@ contains
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                        * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+                       
+                  p_decomp_hgpool_loss(c,j,k) = decomp_hgpools_vr_col(c,j,cascade_donor_pool(k)) &
+                       * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+
                   if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
 
                      if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration

@@ -16,9 +16,14 @@ module CNCStateUpdate3Mod
   use SoilBiogeochemCarbonfluxType  , only : soilbiogeochem_carbonflux_type
   use clm_varctl                    , only : use_erosion, ero_ccycle
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+
+  use spmdMod        , only : masterproc
+  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+  use decompMod      , only : bounds_type
+
   !
   implicit none
-  private
+  private 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: CStateUpdate3
@@ -75,7 +80,11 @@ contains
                  cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
          end do
       end do
-
+!--------------------------------------------------
+ !if (masterproc) then
+    !write(iulog,*)' : The  Output of m_decomp_cpools_to_fire_vr_col = ', cf_veg%m_decomp_cpools_to_fire_vr_col
+  !end if
+!--------------------------------------------------
       ! litter and CWD losses to fire
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp

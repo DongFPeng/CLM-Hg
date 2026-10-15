@@ -40,6 +40,8 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   use SedFluxType            , only : sedflux_type
+  use HgInventoryType        , only : HgInvent_type
+  use HgInventoryMod         , only : HgEmissionProcesses
   use SedYieldMod            , only : SoilErosion 
   use CNProductsMod          , only : cn_products_type
   !
@@ -59,6 +61,9 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
+  use hg0depStreamMod         , only : hg0dep_interp
+  use hg2depStreamMod         , only : hg2dep_interp
+  use hg2_dry_depStreamMod    , only : hg2_dry_dep_interp
   use ActiveLayerMod         , only : alt_calc
   use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
@@ -86,6 +91,12 @@ module clm_driver
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+
+  use SoilBiogeochemHgFluxType        , only : soilbiogeochem_Hgflux_type
+  use SoilBiogeochemHgStateType       , only : soilbiogeochem_Hgstate_type
+
+  !use spmdMod        , only : masterproc
+  !use clm_varctl     , only : iulog, use_vertsoilc, use_fates
 
 
   !
@@ -315,14 +326,15 @@ contains
     ! ============================================================================
 
     call t_startf('dyn_subgrid')
-    call dynSubgrid_driver(bounds_proc,                                               &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst,                        &
-         waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,          &
-         canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
-         c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-         glc_behavior)
+    call dynSubgrid_driver(bounds_proc,                                            &
+          urbanparams_inst, soilstate_inst, soilhydrology_inst,           &
+          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
+          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
+          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
+          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
+          soilbiogeochem_Hgstate_inst,                                                    &
+          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
+          glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -376,6 +388,7 @@ contains
                soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_Hgstate_inst,         &
                soilbiogeochem_nitrogenstate_inst)
        end if
 
@@ -403,6 +416,34 @@ contains
        end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
+    end if
+
+    !-----------------------added Hg-------------------
+    if (use_cn) then
+       call t_startf('bgc_hg_interp')
+       !if (.not. ndep_from_cpl) then
+          call hg0dep_interp(bounds_proc, atm2lnd_inst)
+       !end if
+          call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
+          call t_stopf('bgc_hg_interp')
+    end if
+
+    if (use_cn) then
+       call t_startf('bgc_hg2_interp')
+       !if (.not. ndep_from_cpl) then
+          call hg2dep_interp(bounds_proc, atm2lnd_inst)
+       !end if
+          call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
+          call t_stopf('bgc_hg2_interp')
+    end if
+
+    if (use_cn) then
+       call t_startf('bgc_hg2_dry_interp')
+       !if (.not. ndep_from_cpl) then
+          call hg2_dry_dep_interp(bounds_proc, atm2lnd_inst)
+       !end if
+          call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
+          call t_stopf('bgc_hg2_dry_interp')
     end if
 
     ! Get time varying urban data
@@ -834,6 +875,15 @@ contains
           call t_stopf('erosion')
        end if
 
+          
+     ! ============================================================================
+     ! Update emissional Hg from land unit 
+     ! ============================================================================
+       
+          call t_startf('HgEmissionFlux')
+          call HgEmissionProcesses(bounds_clump, HgInvent_inst)
+          call t_stopf('HgEmissionFlux')
+
        ! ============================================================================
        ! Ecosystem dynamics: Uses CN, CNDV, or static parameterizations
        ! ============================================================================
@@ -847,18 +897,19 @@ contains
        if (use_cn) then 
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
-                  filter(nc)%num_soilc, filter(nc)%soilc,                       &
-                  filter(nc)%num_soilp, filter(nc)%soilp,                       &
-                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,  filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc,  &
-               soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
-               c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-               c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_state_inst,                                               &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-               atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
-               canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-               photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst, sedflux_vars)
+          filter(nc)%num_soilc, filter(nc)%soilc,                       &
+          filter(nc)%num_soilp, filter(nc)%soilp,                       &
+          filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,         &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
+          c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+          soilbiogeochem_state_inst,                                               &
+          soilbiogeochem_HgState_inst, soilbiogeochem_Hgflux_inst,                 &
+          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+          atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
+          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+          photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+          nutrient_competition_method, fireemis_inst, sedflux_vars)
 
           call t_stopf('ecosysdyn')
 
@@ -910,6 +961,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_Hgflux_inst,soilbiogeochem_Hgstate_inst,soilbiogeochem_state_inst,photosyns_inst, &  
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
           call t_stopf('EcosysDynPostDrainage')     
 
@@ -946,6 +998,7 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
                c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
                c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
+               soilbiogeochem_hgflux_inst, soilbiogeochem_hgstate_inst,                            &
                atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
@@ -955,6 +1008,7 @@ contains
                 soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                 c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+                soilbiogeochem_Hgstate_inst,                                             &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
        end if
@@ -1086,7 +1140,7 @@ contains
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-         sedflux_vars, lnd2atm_inst, &
+         sedflux_vars, soilbiogeochem_Hgflux_inst, HgInvent_inst, lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')

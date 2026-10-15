@@ -9,6 +9,8 @@ list(APPEND clm_sources
   SpeciesIsotopeType.F90
   SpeciesNonIsotopeType.F90
   ErosionMod.F90
+  HgInventoryType.F90
+  HgInventoryMod.F90
   )
 
 sourcelist_to_parent(clm_sources)
